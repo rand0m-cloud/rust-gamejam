@@ -1,7 +1,6 @@
 pub use bevy::prelude::*;
 
-pub use crate::GameState;
-pub use crate::ImageAssets;
+pub use crate::{GameState, ImageAssets};
 
 #[derive(Component)]
 pub struct Player;
