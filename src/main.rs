@@ -8,12 +8,14 @@ pub const CLEAR: Color = Color::rgb(0.3, 0.3, 0.3);
 pub const HEIGHT: f32 = 900.0;
 pub const RESOLUTION: f32 = 16.0 / 9.0;
 
+mod bullet;
 mod enemy;
 mod player;
 mod prelude;
 
-use enemy::*;
-use player::*;
+use bullet::BulletPlugin;
+use enemy::EnemyPlugin;
+use player::PlayerPlugin;
 use prelude::*;
 
 #[derive(Eq, PartialEq, Hash, Clone, Debug)]
@@ -56,6 +58,7 @@ fn main() {
         })
         .add_plugin(PlayerPlugin)
         .add_plugin(EnemyPlugin)
+        .add_plugin(BulletPlugin)
         .add_plugin(WorldInspectorPlugin::new())
         .add_startup_system(spawn_camera)
         .add_system(toggle_inspector)

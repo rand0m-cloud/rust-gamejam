@@ -16,6 +16,7 @@ pub struct MovementStats {
 #[derive(Component)]
 pub struct Bullet {
     pub speed: f32,
+    pub direction: Vec2,
 }
 
 #[derive(Component)]
