@@ -28,7 +28,7 @@ pub struct CircleCollider;
 #[derive(Component)]
 pub struct Minion;
 
-#[derive(Component)]
+#[derive(Copy, Clone, Debug, Component)]
 pub enum ChickenOrDog {
     Chicken,
     Dog,

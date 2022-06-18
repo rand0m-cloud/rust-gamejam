@@ -8,13 +8,13 @@ impl Plugin for MinionPlugin {
     }
 }
 
-pub fn spawn_minions(mut commands: Commands, assets: Res<AssetServer>) {
+pub fn spawn_minions(mut commands: Commands, assets: Res<ImageAssets>) {
     spawn_minions_spawner(commands, assets, ChickenOrDog::Chicken);
 }
 
 fn spawn_minions_spawner(
     mut commands: Commands,
-    assets: Res<AssetServer>,
+    assets: Res<ImageAssets>,
     minion_type: ChickenOrDog,
 ) {
     let spawn_locations = [(-0.5, 0.5), (0.5, 0.5), (0.0, 1.0)]
@@ -29,7 +29,7 @@ fn spawn_minions_spawner(
     for spawn_location in spawn_locations {
         commands
             .spawn_bundle(SpriteBundle {
-                texture,
+                texture: texture.clone(),
                 sprite: Sprite {
                     color: Color::RED,
                     custom_size: Some(Vec2::splat(0.25)),
