@@ -24,3 +24,15 @@ pub struct RectCollider;
 
 #[derive(Component)]
 pub struct CircleCollider;
+
+#[derive(Component)]
+pub struct Minion;
+
+#[derive(Component)]
+pub enum ChickenOrDog {
+    Chicken,
+    Dog,
+}
+
+#[derive(Component)]
+pub struct Spawner;

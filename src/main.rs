@@ -10,6 +10,7 @@ pub const RESOLUTION: f32 = 16.0 / 9.0;
 
 mod bullet;
 mod enemy;
+mod minion;
 mod player;
 mod prelude;
 
@@ -31,6 +32,12 @@ pub struct ImageAssets {
 
     #[asset(path = "awesome.png")]
     pub enemy_placeholder: Handle<Image>,
+
+    #[asset(path = "awesome.png")]
+    pub chicken_spawner: Handle<Image>,
+
+    #[asset(path = "awesome.png")]
+    pub dog_spawner: Handle<Image>,
 }
 
 fn main() {
@@ -59,6 +66,7 @@ fn main() {
         .add_plugin(PlayerPlugin)
         .add_plugin(EnemyPlugin)
         .add_plugin(BulletPlugin)
+        .add_plugin(MinionPlugin)
         .add_plugin(WorldInspectorPlugin::new())
         .add_startup_system(spawn_camera)
         .add_system(toggle_inspector)
