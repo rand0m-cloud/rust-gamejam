@@ -1,3 +1,5 @@
+use bevy::transform;
+
 use crate::prelude::*;
 
 pub struct PlayerPlugin;
@@ -13,8 +15,19 @@ fn player_movement(
     mut player: Query<(&mut Transform, &MovementStats), With<Player>>,
     time: Res<Time>,
     keyboard: Res<Input<KeyCode>>,
+    axis: Res<Axis<GamepadAxis>>,
 ) {
     let (mut transform, stats) = player.single_mut();
+
+    let axis_lx = GamepadAxis(Gamepad(1), GamepadAxisType::LeftStickX);
+    let axis_ly = GamepadAxis(Gamepad(1), GamepadAxisType::LeftStickY);
+
+    if let (Some(x), Some(y)) = (axis.get(axis_lx), axis.get(axis_ly)) {
+        println!("{:?}", x);
+        transform.translation.x += x * stats.speed * time.delta_seconds();
+        transform.translation.y += y * stats.speed * time.delta_seconds();
+    }
+
     if keyboard.pressed(KeyCode::D) {
         transform.translation.x += time.delta_seconds() * stats.speed;
     }
