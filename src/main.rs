@@ -1,4 +1,4 @@
-use bevy::{render::camera::ScalingMode, utils::tracing::level_filters, window::PresentMode};
+use bevy::{render::camera::ScalingMode, window::PresentMode};
 use bevy_asset_loader::{AssetCollection, AssetLoader};
 use bevy_inspector_egui::{WorldInspectorParams, WorldInspectorPlugin};
 
@@ -6,8 +6,10 @@ pub const CLEAR: Color = Color::rgb(0.3, 0.3, 0.3);
 pub const HEIGHT: f32 = 900.0;
 pub const RESOLUTION: f32 = 16.0 / 9.0;
 
+mod player;
 mod prelude;
 
+use player::*;
 use prelude::*;
 
 #[derive(Eq, PartialEq, Hash, Clone, Debug)]
@@ -24,10 +26,12 @@ pub struct ImageAssets {
 
 fn main() {
     let mut app = App::new();
+
     AssetLoader::new(GameState::Splash)
         .continue_to_state(GameState::GamePlay)
         .with_collection::<ImageAssets>()
         .build(&mut app);
+
     app.add_state(GameState::Splash)
         .insert_resource(ClearColor(CLEAR))
         .insert_resource(WindowDescriptor {
@@ -43,22 +47,11 @@ fn main() {
             enabled: false,
             ..Default::default()
         })
+        .add_plugin(PlayerPlugin)
         .add_plugin(WorldInspectorPlugin::new())
-        .add_system_set(SystemSet::on_enter(GameState::GamePlay).with_system(spawn_player))
         .add_startup_system(spawn_camera)
         .add_system(toggle_inspector)
         .run();
-}
-
-fn spawn_player(mut commands: Commands, assets: Res<ImageAssets>) {
-    commands.spawn_bundle(SpriteBundle {
-        texture: assets.placeholder.clone(),
-        sprite: Sprite {
-            custom_size: Some(Vec2::splat(1.0)),
-            ..default()
-        },
-        ..default()
-    });
 }
 
 fn spawn_camera(mut commands: Commands) {

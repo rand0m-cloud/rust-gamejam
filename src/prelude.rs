@@ -1,5 +1,8 @@
 pub use bevy::prelude::*;
 
+pub use crate::GameState;
+pub use crate::ImageAssets;
+
 #[derive(Component)]
 pub struct Player;
 
@@ -8,12 +11,12 @@ pub struct Enemy;
 
 #[derive(Component)]
 pub struct MovementStats {
-    speed: f32,
+    pub speed: f32,
 }
 
 #[derive(Component)]
 pub struct Bullet {
-    speed: f32,
+    pub speed: f32,
 }
 
 #[derive(Component)]
