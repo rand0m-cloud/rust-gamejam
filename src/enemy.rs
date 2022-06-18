@@ -3,8 +3,8 @@ use crate::prelude::*;
 pub struct EnemyPlugin;
 impl Plugin for EnemyPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system_set(SystemSet::on_enter(GameState::GamePlay).with_system(spawn_enemies))
-            .add_system_set(SystemSet::on_update(GameState::GamePlay).with_system(enemy_ai));
+        app.add_system_set(SystemSet::on_enter(GameState::GamePlay).with_system(spawn_enemies));
+        //.add_system_set(SystemSet::on_update(GameState::GamePlay).with_system(enemy_ai));
     }
 }
 
@@ -18,7 +18,7 @@ pub fn spawn_enemies(mut commands: Commands, assets: Res<ImageAssets>) {
             .spawn_bundle(SpriteBundle {
                 texture: assets.placeholder.clone(),
                 sprite: Sprite {
-                    color: Color::RED,
+                    color: Color::BLUE,
                     custom_size: Some(Vec2::splat(0.25)),
                     ..default()
                 },
