@@ -19,13 +19,14 @@ fn player_movement(
 ) {
     let (mut transform, stats) = player.single_mut();
 
-    let axis_lx = GamepadAxis(Gamepad(1), GamepadAxisType::LeftStickX);
-    let axis_ly = GamepadAxis(Gamepad(1), GamepadAxisType::LeftStickY);
+    for id in 0..16 {
+        let axis_lx = GamepadAxis(Gamepad(id), GamepadAxisType::LeftStickX);
+        let axis_ly = GamepadAxis(Gamepad(id), GamepadAxisType::LeftStickY);
 
-    if let (Some(x), Some(y)) = (axis.get(axis_lx), axis.get(axis_ly)) {
-        println!("{:?}", x);
-        transform.translation.x += x * stats.speed * time.delta_seconds();
-        transform.translation.y += y * stats.speed * time.delta_seconds();
+        if let (Some(x), Some(y)) = (axis.get(axis_lx), axis.get(axis_ly)) {
+            transform.translation.x += x * stats.speed * time.delta_seconds();
+            transform.translation.y += y * stats.speed * time.delta_seconds();
+        }
     }
 
     if keyboard.pressed(KeyCode::D) {
