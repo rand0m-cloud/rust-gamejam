@@ -18,7 +18,7 @@ pub fn spawn_enemies(mut commands: Commands, assets: Res<ImageAssets>) {
             .spawn_bundle(SpriteBundle {
                 texture: assets.placeholder.clone(),
                 sprite: Sprite {
-                    color: Color::RED,
+                    color: Color::BLUE,
                     custom_size: Some(Vec2::splat(0.25)),
                     ..default()
                 },
