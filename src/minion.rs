@@ -52,7 +52,7 @@ fn spawn_minion(
 
     commands
         .spawn_bundle(SpriteBundle {
-            texture: texture.clone(),
+            texture,
             sprite: Sprite {
                 color,
                 custom_size: Some(Vec2::splat(0.25)),
