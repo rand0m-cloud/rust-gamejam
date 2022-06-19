@@ -16,6 +16,7 @@ mod prelude;
 
 use bullet::BulletPlugin;
 use enemy::EnemyPlugin;
+use minion::*;
 use player::PlayerPlugin;
 use prelude::*;
 
