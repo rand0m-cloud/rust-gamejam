@@ -2777,7 +2777,7 @@ dependencies = [
 
 [[package]]
 name = "rust-gamejam"
-version = "0.0.0"
+version = "0.0.1"
 dependencies = [
  "bevy",
  "bevy-inspector-egui",
