@@ -18,8 +18,6 @@ pub enum Layer {
     Enemy,
     Player,
     Wall,
-    //None must exist to easily check against default (default is all for some cursed reason)
-    None,
 }
 
 #[derive(Component)]
@@ -62,15 +60,17 @@ pub struct Spawner {
     pub timer: Timer,
 }
 
-//Physics helpers
-pub fn layer_contains_group(layer: &CollisionLayers, group: &Layer) -> bool {
-    layer.contains_group(group) && !layer.contains_group(Layer::None)
-}
+/// Checks if a collision event contains a bullet. If so, return the entities with the bullet as the first entity
+pub fn is_bullet_collision(event: &CollisionEvent) -> Option<(Entity, Entity)> {
+    let entities = event.rigid_body_entities();
+    let layers = event.collision_layers();
 
-pub fn check_both_entitys<T, F>(entities: (T, T), mut f: F)
-where
-    F: FnMut(T),
-{
-    f(entities.0);
-    f(entities.1);
+    match [layers.0, layers.1]
+        .into_iter()
+        .position(|layer| layer.contains_group(Layer::Bullet))
+    {
+        Some(0) => Some(entities),
+        Some(1) => Some((entities.1, entities.0)),
+        _ => None,
+    }
 }
