@@ -12,7 +12,7 @@ impl Plugin for MinionPlugin {
 #[derive(Bundle)]
 pub struct MinionBundle {
     #[bundle]
-    sprite: SpriteBundle,
+    sprite: SpriteSheetBundle,
     movement_stats: MovementStats,
     minion_type: ChickenOrDog,
     minion: Minion,
@@ -36,10 +36,11 @@ pub struct ChickenMinionConfig {
 }
 
 impl MinionBundle {
-    pub fn create_dog_minion(
+    pub fn spawn_dog_minion(
+        commands: &mut Commands,
         assets: &Res<OurAssets>,
         spawn_location: Vec2,
-    ) -> anyhow::Result<Self> {
+    ) -> anyhow::Result<Entity> {
         let config: DogMinionConfig = ron::de::from_reader(
             std::fs::File::open("assets/config/dog_minion.ron")
                 .context("failed to open assets/config/dog_minion.ron")?,
@@ -47,38 +48,42 @@ impl MinionBundle {
         .context("failed to deserialize DogMinionConfig")?;
         let size = 0.25;
 
-        Ok(Self {
-            sprite: SpriteBundle {
-                texture: assets.dog_spawner.clone(),
-                sprite: Sprite {
-                    color: Color::SALMON,
-                    custom_size: Some(Vec2::splat(size)),
+        let ent = commands
+            .spawn_bundle(MinionBundle {
+                sprite: SpriteSheetBundle {
+                    texture_atlas: assets.placeholder_atlas.clone(),
+                    sprite: TextureAtlasSprite {
+                        color: Color::SALMON,
+                        custom_size: Some(Vec2::splat(size)),
+                        ..default()
+                    },
+                    transform: Transform::from_translation(Vec3::new(
+                        spawn_location.x,
+                        spawn_location.y,
+                        1.0,
+                    )),
                     ..default()
                 },
-                transform: Transform::from_translation(Vec3::new(
-                    spawn_location.x,
-                    spawn_location.y,
-                    1.0,
-                )),
-                ..default()
-            },
-            movement_stats: MovementStats {
-                speed: config.speed,
-            },
-            minion_type: ChickenOrDog::Dog,
-            minion: Minion,
-            hp: Health(config.hp),
-            rigid_body: RigidBody::Dynamic,
-            collision_shape: CollisionShape::Sphere { radius: size / 2.0 },
-            rotation_constraints: RotationConstraints::lock(),
-            collision_layer: CollisionLayers::all_masks::<Layer>().with_group(Layer::Enemy),
-        })
+                movement_stats: MovementStats {
+                    speed: config.speed,
+                },
+                minion_type: ChickenOrDog::Dog,
+                minion: Minion,
+                hp: Health(config.hp),
+                rigid_body: RigidBody::Dynamic,
+                collision_shape: CollisionShape::Sphere { radius: size / 2.0 },
+                rotation_constraints: RotationConstraints::lock(),
+                collision_layer: CollisionLayers::all_masks::<Layer>().with_group(Layer::Enemy),
+            })
+            .id();
+        Ok(ent)
     }
 
-    pub fn create_chicken_minion(
+    pub fn spawn_chicken_minion(
+        commands: &mut Commands,
         assets: &Res<OurAssets>,
         spawn_location: Vec2,
-    ) -> anyhow::Result<Self> {
+    ) -> anyhow::Result<Entity> {
         let config: ChickenMinionConfig = ron::de::from_reader(
             std::fs::File::open("assets/config/chicken_minion.ron")
                 .context("failed to open assets/config/chicken_minion.ron")?,
@@ -86,48 +91,35 @@ impl MinionBundle {
         .context("failed to deserialize ChickenMinionConfig")?;
         let size = 0.25;
 
-        Ok(Self {
-            sprite: SpriteBundle {
-                texture: assets.chicken_spawner.clone(),
-                sprite: Sprite {
-                    color: Color::GREEN,
-                    custom_size: Some(Vec2::splat(size)),
+        let ent = commands
+            .spawn_bundle(MinionBundle {
+                sprite: SpriteSheetBundle {
+                    texture_atlas: assets.placeholder_atlas.clone(),
+                    sprite: TextureAtlasSprite {
+                        color: Color::GREEN,
+                        ..default()
+                    },
+                    transform: Transform::from_translation(Vec3::new(
+                        spawn_location.x,
+                        spawn_location.y,
+                        1.0,
+                    )),
                     ..default()
                 },
-                transform: Transform::from_translation(Vec3::new(
-                    spawn_location.x,
-                    spawn_location.y,
-                    1.0,
-                )),
-                ..default()
-            },
-            movement_stats: MovementStats {
-                speed: config.speed,
-            },
-            minion_type: ChickenOrDog::Dog,
-            minion: Minion,
-            hp: Health(config.hp),
-            rigid_body: RigidBody::Dynamic,
-            collision_shape: CollisionShape::Sphere { radius: size / 2.0 },
-            rotation_constraints: RotationConstraints::lock(),
-            collision_layer: CollisionLayers::all_masks::<Layer>().with_group(Layer::Enemy),
-        })
+                movement_stats: MovementStats {
+                    speed: config.speed,
+                },
+                minion_type: ChickenOrDog::Dog,
+                minion: Minion,
+                hp: Health(config.hp),
+                rigid_body: RigidBody::Dynamic,
+                collision_shape: CollisionShape::Sphere { radius: size / 2.0 },
+                rotation_constraints: RotationConstraints::lock(),
+                collision_layer: CollisionLayers::all_masks::<Layer>().with_group(Layer::Enemy),
+            })
+            .id();
+        Ok(ent)
     }
-}
-
-pub fn spawn_minion(
-    commands: &mut Commands,
-    assets: &Res<OurAssets>,
-    minion_type: ChickenOrDog,
-    spawn_location: Vec2,
-) {
-    let minion = match minion_type {
-        ChickenOrDog::Chicken => MinionBundle::create_chicken_minion(assets, spawn_location),
-        ChickenOrDog::Dog => MinionBundle::create_dog_minion(assets, spawn_location),
-    }
-    .unwrap();
-
-    commands.spawn_bundle(minion);
 }
 
 pub fn minions_ai(

@@ -39,14 +39,25 @@ pub struct OurAssets {
     pub placeholder: Handle<Image>,
     #[asset(path = "chicken.png")]
     pub chicken: Handle<Image>,
+
     #[asset(path = "chicken_minion.png")]
     pub chicken_minion: Handle<Image>,
+
+    #[asset(texture_atlas(tile_size_x = 512., tile_size_y = 512., columns = 1, rows = 1))]
+    #[asset(path = "awesome.png")]
+    pub placeholder_atlas: Handle<TextureAtlas>,
+
+    #[asset(path = "chicken_minion.png")]
+    pub dog_atlas: Handle<TextureAtlas>,
+
+    #[asset(path = "awesome.png")]
+    pub dog_spawner: Handle<Image>,
+
     #[asset(path = "awesome.png")]
     pub enemy_placeholder: Handle<Image>,
     #[asset(path = "awesome.png")]
     pub chicken_spawner: Handle<Image>,
-    #[asset(path = "awesome.png")]
-    pub dog_spawner: Handle<Image>,
+
     #[asset(path = "main.map")]
     pub map: Handle<Map>,
 }
@@ -110,7 +121,7 @@ fn parse_animation(file_name: &str, atlas: &mut TextureAtlas) -> Vec<TextureAtla
 
 fn load_graphics(
     mut commands: Commands,
-    assets: Res<OurAssets>,
+    mut assets: ResMut<OurAssets>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
     images: Res<Assets<Image>>,
 ) {
@@ -118,13 +129,25 @@ fn load_graphics(
     let chicken_image = images.get(assets.chicken.clone()).unwrap();
     let mut chicken_atlas = TextureAtlas::new_empty(assets.chicken.clone(), chicken_image.size());
 
-    let chicken_walk = parse_animation("assets/chicken_walk.ron", &mut chicken_atlas);
-    let chicken_shoot = parse_animation("assets/chicken_walk.ron", &mut chicken_atlas);
+    let chick_image = images.get(assets.chicken_minion.clone()).unwrap();
+    let mut chick_atlas =
+        TextureAtlas::new_empty(assets.chicken_minion.clone(), chicken_image.size());
 
-    let handle = texture_atlases.add(chicken_atlas);
+    let chicken_walk = parse_animation("assets/chicken_walk.ron", &mut chicken_atlas);
+    let chicken_shoot = parse_animation("assets/chicken_shoot.ron", &mut chicken_atlas);
+
+    let chick_walk = parse_animation("assets/chick_walk.ron", &mut chick_atlas);
+    let chick_attack = parse_animation("assets/chick_attack.ron", &mut chick_atlas);
+
+    let chicken_handle = texture_atlases.add(chicken_atlas);
+    let chick_handle = texture_atlases.add(chick_atlas);
 
     commands.insert_resource(ChickenWalkFrames {
         frames: chicken_walk,
-        texture: handle,
+        texture: chicken_handle,
+    });
+    commands.insert_resource(ChickWalkFrames {
+        frames: chick_walk,
+        texture: chick_handle,
     });
 }

@@ -52,6 +52,7 @@ fn main() {
         .add_plugin(SpawnerPlugin)
         .add_startup_system(spawn_camera)
         .add_system(toggle_inspector)
+        .register_type::<Animation>()
         .run();
 }
 
