@@ -157,9 +157,7 @@ pub fn minions_spawner_ai(
     time: Res<Time>,
 ) {
     for (mut spawner, transform, chicken_or_dog) in spawners_query.iter_mut() {
-        spawner
-            .timer
-            .tick(Duration::from_secs_f32(time.delta_seconds()));
+        spawner.timer.tick(time.delta());
         if spawner.timer.just_finished() {
             spawn_minion(
                 &mut commands,
