@@ -64,6 +64,10 @@ pub enum ChickenOrDog {
 #[derive(Component)]
 pub struct Spawner {
     pub timer: Timer,
+    pub capture_time: f64,
+    // -1.0 < progress < 1.0
+    // negative means the enemy won the objective
+    pub capture_progress: f64,
 }
 
 /// Checks if a collision event contains a bullet. If so, return the entities with the bullet as the first entity

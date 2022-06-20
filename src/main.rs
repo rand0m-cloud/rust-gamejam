@@ -50,6 +50,8 @@ fn main() {
         .add_plugin(WorldInspectorPlugin::new())
         .add_startup_system(spawn_camera)
         .add_system(toggle_inspector)
+        .add_system(rust_gamejam::external::collisions::update_collisions_system)
+        .register_type::<rust_gamejam::external::collisions::Collisions>()
         .run();
 }
 
