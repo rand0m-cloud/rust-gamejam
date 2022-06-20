@@ -18,6 +18,9 @@ pub enum Layer {
     Enemy,
     Player,
     Wall,
+
+    // only for sanity checks, default physics layers is all layers and masks
+    None,
 }
 
 #[derive(Component)]
@@ -64,6 +67,11 @@ pub struct Spawner {
 pub fn is_bullet_collision(event: &CollisionEvent) -> Option<(Entity, Entity)> {
     let entities = event.rigid_body_entities();
     let layers = event.collision_layers();
+
+    // assert that neither layer is uninitialized
+    assert!(![layers.0, layers.1]
+        .into_iter()
+        .any(|layer| layer.contains_group(Layer::None)));
 
     match [layers.0, layers.1]
         .into_iter()
