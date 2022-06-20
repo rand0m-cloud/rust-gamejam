@@ -121,7 +121,7 @@ impl MinionBundle {
             sprite: SpriteBundle {
                 texture: assets.chicken_spawner.clone(),
                 sprite: Sprite {
-                    color: Color::SALMON,
+                    color: Color::GREEN,
                     custom_size: Some(Vec2::splat(size)),
                     ..default()
                 },
