@@ -15,12 +15,20 @@ impl Plugin for PlayerPlugin {
 
 fn player_shoot(
     mut commands: Commands,
-    player: Query<&Transform, With<Player>>,
+    mut player: Query<(&Transform, &mut Player)>,
+
     keyboard: Res<Input<KeyCode>>,
     axis: Res<Axis<GamepadAxis>>,
+    time: Res<Time>,
+
     assets: Res<OurAssets>,
 ) {
-    let transform = player.single();
+    let (transform, mut player) = player.single_mut();
+
+    if !player.bullet_cooldown.finished() {
+        player.bullet_cooldown.tick(time.delta());
+        return;
+    }
 
     let mut target_dir = Vec2::ZERO;
 
@@ -53,6 +61,8 @@ fn player_shoot(
         transform.translation.z += 1.0;
 
         let size = 0.1;
+
+        player.bullet_cooldown.tick(time.delta());
 
         commands
             .spawn_bundle(SpriteBundle {
@@ -131,7 +141,9 @@ fn spawn_player(mut commands: Commands, chicken_walk: Res<ChickenWalkFrames>) {
             texture_atlas: chicken_walk.texture.clone(),
             ..default()
         })
-        .insert(Player)
+        .insert(Player {
+            bullet_cooldown: Timer::from_seconds(0.3, true),
+        })
         .insert(MovementStats { speed: 0.5 })
         .insert(RigidBody::Dynamic)
         .insert(CollisionShape::Sphere { radius: size / 2.0 })

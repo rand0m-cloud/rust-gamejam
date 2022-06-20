@@ -5,7 +5,9 @@ pub use heron::prelude::*;
 pub use crate::{assets::OurAssets, map::Map, GameState};
 
 #[derive(Component)]
-pub struct Player;
+pub struct Player {
+    pub bullet_cooldown: Timer,
+}
 
 #[derive(Component)]
 pub struct Enemy;
