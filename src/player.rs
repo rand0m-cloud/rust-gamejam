@@ -25,14 +25,9 @@ fn player_shoot(
 ) {
     let (transform, mut player) = player.single_mut();
 
-    // FIXME um please help
-    if !player.can_shoot {
+    if !player.bullet_cooldown.finished() {
         player.bullet_cooldown.tick(time.delta());
-        if player.bullet_cooldown.just_finished() {
-            player.can_shoot = true;
-        } else {
-            return;
-        }
+        return;
     }
 
     let mut target_dir = Vec2::ZERO;
@@ -67,7 +62,7 @@ fn player_shoot(
 
         let size = 0.1;
 
-        player.can_shoot = false;
+        player.bullet_cooldown.tick(time.delta());
 
         commands
             .spawn_bundle(SpriteBundle {
@@ -147,7 +142,6 @@ fn spawn_player(mut commands: Commands, chicken_walk: Res<ChickenWalkFrames>) {
             ..default()
         })
         .insert(Player {
-            can_shoot: true,
             bullet_cooldown: Timer::from_seconds(0.3, true),
         })
         .insert(MovementStats { speed: 0.5 })
