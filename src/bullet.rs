@@ -10,7 +10,7 @@ impl Plugin for BulletPlugin {
 
 fn delete_bullet(mut commands: Commands, mut events: EventReader<CollisionEvent>) {
     // Tracking which bullets have already been despawned to prevent the edge case of 1 bullet hitting 2 things in 1 frame
-    // Double despawn isn't a crash but it's anoying warning
+    // Double despawn isn't a crash but it's an annoying warning
     let mut despawned = Vec::new();
 
     for event in events.iter().filter(|e| e.is_started()) {

@@ -40,6 +40,7 @@ pub struct OurAssets {
 
     #[asset(path = "awesome.png")]
     pub dog_spawner: Handle<Image>,
+
     #[asset(path = "main.map")]
     pub map: Handle<Map>,
 }
