@@ -4,7 +4,18 @@ pub struct EnemyPlugin;
 impl Plugin for EnemyPlugin {
     fn build(&self, app: &mut App) {
         app.add_system_set(SystemSet::on_enter(GameState::GamePlay).with_system(spawn_enemies))
-            .add_system_set(SystemSet::on_update(GameState::GamePlay).with_system(enemy_ai));
+            .add_system_set(SystemSet::on_update(GameState::GamePlay).with_system(enemy_ai))
+            .add_system(enemy_death);
+    }
+}
+
+//seperate system in case there's other ways to die in the future
+//or an effect :)
+pub fn enemy_death(enemies: Query<(Entity, &Health)>, mut commands: Commands) {
+    for (ent, health) in enemies.iter() {
+        if health.0 <= 0.0 {
+            commands.entity(ent).despawn_recursive();
+        }
     }
 }
 
@@ -31,7 +42,8 @@ pub fn spawn_enemies(mut commands: Commands, assets: Res<OurAssets>) {
                 )),
                 ..default()
             })
-            .insert(Enemy {})
+            .insert(Enemy)
+            .insert(Health(3.0))
             .insert(MovementStats { speed: 0.1 })
             .insert(RigidBody::Dynamic)
             .insert(CollisionShape::Sphere { radius: size / 2.0 })
