@@ -15,7 +15,7 @@ pub struct Enemy;
 #[derive(Component)]
 pub struct Health(pub f32);
 
-#[derive(PhysicsLayer)]
+#[derive(PhysicsLayer, Copy, Clone)]
 pub enum Layer {
     Bullet,
     Enemy,
@@ -68,6 +68,11 @@ pub struct Spawner {
 
 /// Checks if a collision event contains a bullet. If so, return the entities with the bullet as the first entity
 pub fn is_bullet_collision(event: &CollisionEvent) -> Option<(Entity, Entity)> {
+    is_layer_collision(event, Layer::Bullet)
+}
+
+/// Checks if a collision event contains the specific physics layer. If so, return the entities with the chosen layer as the first entity
+pub fn is_layer_collision(event: &CollisionEvent, layer: Layer) -> Option<(Entity, Entity)> {
     let entities = event.rigid_body_entities();
     let layers = event.collision_layers();
 
@@ -78,7 +83,7 @@ pub fn is_bullet_collision(event: &CollisionEvent) -> Option<(Entity, Entity)> {
 
     match [layers.0, layers.1]
         .into_iter()
-        .position(|layer| layer.contains_group(Layer::Bullet))
+        .position(|l| l.contains_group(layer))
     {
         Some(0) => Some(entities),
         Some(1) => Some((entities.1, entities.0)),
