@@ -1,7 +1,7 @@
 pub use bevy::prelude::*;
 pub use heron::prelude::*;
 
-pub use crate::{map::Map, GameState, OurAssets};
+pub use crate::{assets::OurAssets, map::Map, GameState};
 
 #[derive(Component)]
 pub struct Player;
@@ -15,6 +15,14 @@ pub enum Layer {
     Enemy,
     Player,
     Wall,
+}
+#[derive(Component)]
+pub struct Animation {
+    pub current_frame: usize,
+    pub frames: Vec<usize>,
+    pub playing: bool,
+    pub flip_x: bool,
+    pub timer: Timer,
 }
 
 #[derive(Component)]
