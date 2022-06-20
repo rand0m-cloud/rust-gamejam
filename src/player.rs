@@ -1,3 +1,5 @@
+use bevy::render::camera::Camera2d;
+
 use crate::{assets::ChickenWalkFrames, prelude::*};
 
 pub struct PlayerPlugin;
@@ -8,9 +10,20 @@ impl Plugin for PlayerPlugin {
             .add_system_set(
                 SystemSet::on_update(GameState::GamePlay)
                     .with_system(player_movement)
+                    .with_system(camera_follow.after(player_movement))
                     .with_system(player_shoot),
             );
     }
+}
+
+fn camera_follow(
+    player_query: Query<&Transform, With<Player>>,
+    mut camera_query: Query<&mut Transform, (With<Camera2d>, Without<Player>)>,
+) {
+    let mut camera_translation = camera_query.single_mut();
+    let player_translation = player_query.single().translation;
+    camera_translation.translation.x = player_translation.x;
+    camera_translation.translation.y = player_translation.y;
 }
 
 fn player_shoot(
