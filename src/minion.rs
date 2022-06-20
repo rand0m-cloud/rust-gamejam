@@ -70,6 +70,7 @@ fn spawn_minion(
         .insert(MovementStats { speed: 0.1 })
         .insert(minion_type)
         .insert(Minion)
+        .insert(Health(1.0))
         .insert(RigidBody::Dynamic)
         .insert(CollisionShape::Sphere { radius: size / 2.0 })
         .insert(RotationConstraints::lock())
@@ -130,16 +131,17 @@ pub fn minions_ai(
     for (minion_type, global_transform, mut transform, movement_stats) in minion_query.iter_mut() {
         let position = global_transform.translation;
         let target_position = if *minion_type == ChickenOrDog::Chicken {
-            let closest_enemy = enemy_query
-                .iter()
-                .min_by(|transform, other_transform| {
-                    (position - transform.translation)
-                        .length()
-                        .partial_cmp(&(position - other_transform.translation).length())
-                        .unwrap()
-                })
-                .unwrap();
-            closest_enemy.translation
+            if let Some(closest_enemy) = enemy_query.iter().min_by(|transform, other_transform| {
+                (position - transform.translation)
+                    .length()
+                    .partial_cmp(&(position - other_transform.translation).length())
+                    .unwrap()
+            }) {
+                closest_enemy.translation
+            } else {
+                //XXX gross
+                player_query.single().translation
+            }
         } else {
             player_query.single().translation
         };

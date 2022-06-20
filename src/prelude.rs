@@ -9,13 +9,19 @@ pub struct Player;
 #[derive(Component)]
 pub struct Enemy;
 
+#[derive(Component)]
+pub struct Health(pub f32);
+
 #[derive(PhysicsLayer)]
 pub enum Layer {
     Bullet,
     Enemy,
     Player,
     Wall,
+    //None must exist to easily check against default (default is all for some cursed reason)
+    None,
 }
+
 #[derive(Component)]
 pub struct Animation {
     pub current_frame: usize,
@@ -54,4 +60,17 @@ pub enum ChickenOrDog {
 #[derive(Component)]
 pub struct Spawner {
     pub timer: Timer,
+}
+
+//Physics helpers
+pub fn layer_contains_group(layer: &CollisionLayers, group: &Layer) -> bool {
+    layer.contains_group(group) && !layer.contains_group(Layer::None)
+}
+
+pub fn check_both_entitys<T, F>(entities: (T, T), mut f: F)
+where
+    F: FnMut(T),
+{
+    f(entities.0);
+    f(entities.1);
 }
