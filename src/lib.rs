@@ -1,3 +1,5 @@
+#![allow(clippy::type_complexity)]
+
 pub mod assets;
 pub mod bullet;
 pub mod enemy;

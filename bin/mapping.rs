@@ -1,7 +1,9 @@
+#![allow(clippy::type_complexity)]
+
 use std::fs;
 
 use bevy::{prelude::*, render::camera::ScalingMode, window::PresentMode};
-use bevy_inspector_egui::{egui::Key, WorldInspectorParams, WorldInspectorPlugin};
+use bevy_inspector_egui::{WorldInspectorParams, WorldInspectorPlugin};
 use ron::ser::{to_string_pretty, PrettyConfig};
 
 pub const CLEAR: Color = Color::rgb(0.3, 0.3, 0.3);
@@ -39,7 +41,7 @@ fn save_map(map: Query<&Transform, With<MapSquare>>, input: Res<Input<KeyCode>>)
 
 fn load_map(mut commands: Commands) {
     if let Ok(map) =
-        ron::de::from_str::<Map>(&fs::read_to_string("assets/main.map").unwrap_or("".to_string()))
+        ron::de::from_str::<Map>(&fs::read_to_string("assets/main.map").unwrap_or_default())
     {
         for rect in &map.rects {
             commands
