@@ -8,27 +8,13 @@ pub const CLEAR: Color = Color::rgb(0.3, 0.3, 0.3);
 pub const HEIGHT: f32 = 900.0;
 pub const RESOLUTION: f32 = 16.0 / 9.0;
 
-mod assets;
-mod bullet;
-mod enemy;
-mod map;
-mod minion;
-mod player;
-mod prelude;
-
-use assets::GameAssetsPlugin;
-use bullet::BulletPlugin;
-use enemy::EnemyPlugin;
-use map::MapPlugin;
-use minion::*;
-use player::PlayerPlugin;
-use prelude::*;
-
-#[derive(Eq, PartialEq, Hash, Clone, Debug)]
-pub enum GameState {
-    Splash,
-    GamePlay,
-}
+use rust_gamejam::assets::GameAssetsPlugin;
+use rust_gamejam::bullet::BulletPlugin;
+use rust_gamejam::enemy::EnemyPlugin;
+use rust_gamejam::map::MapPlugin;
+use rust_gamejam::minion::*;
+use rust_gamejam::player::PlayerPlugin;
+use rust_gamejam::prelude::*;
 
 fn main() {
     let mut app = App::new();

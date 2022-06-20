@@ -5,19 +5,19 @@ use bevy::{
     reflect::TypeUuid,
     utils::BoxedFuture,
 };
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Deserialize)]
-struct Rect {
-    position: Vec2,
-    size: Vec2,
-    rotation: f32,
+#[derive(Debug, Deserialize, Serialize)]
+pub struct Rect {
+    pub position: Vec2,
+    pub size: Vec2,
+    pub rotation: f32,
 }
 
-#[derive(Debug, Deserialize, TypeUuid)]
+#[derive(Debug, Deserialize, Serialize, TypeUuid)]
 #[uuid = "615963e9-3a3d-4eaa-bed3-76e8f05a1070"]
 pub struct Map {
-    rects: Vec<Rect>,
+    pub rects: Vec<Rect>,
 }
 
 pub struct MapPlugin;
