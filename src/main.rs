@@ -8,13 +8,10 @@ pub const CLEAR: Color = Color::rgb(0.3, 0.3, 0.3);
 pub const HEIGHT: f32 = 900.0;
 pub const RESOLUTION: f32 = 16.0 / 9.0;
 
-use rust_gamejam::assets::GameAssetsPlugin;
-use rust_gamejam::bullet::BulletPlugin;
-use rust_gamejam::enemy::EnemyPlugin;
-use rust_gamejam::map::MapPlugin;
-use rust_gamejam::minion::*;
-use rust_gamejam::player::PlayerPlugin;
-use rust_gamejam::prelude::*;
+use rust_gamejam::{
+    assets::GameAssetsPlugin, bullet::BulletPlugin, enemy::EnemyPlugin, map::MapPlugin, minion::*,
+    player::PlayerPlugin, prelude::*,
+};
 
 fn main() {
     let mut app = App::new();
