@@ -5,7 +5,11 @@ pub use heron::prelude::*;
 pub use crate::{assets::OurAssets, map::Map, GameState};
 
 #[derive(Component)]
-pub struct Player;
+pub struct Player {
+    //TODO would be nice to just use timer and no bool but I got stink brain
+    pub can_shoot: bool,
+    pub bullet_cooldown: Timer,
+}
 
 #[derive(Component)]
 pub struct Enemy;
