@@ -1,6 +1,6 @@
 #![allow(clippy::type_complexity)]
 
-use bevy::{render::camera::ScalingMode, window::PresentMode};
+use bevy::{asset::AssetServerSettings, render::camera::ScalingMode, window::PresentMode};
 use bevy_asset_loader::{AssetCollection, AssetLoader};
 use bevy_inspector_egui::{WorldInspectorParams, WorldInspectorPlugin};
 
@@ -10,12 +10,14 @@ pub const RESOLUTION: f32 = 16.0 / 9.0;
 
 mod bullet;
 mod enemy;
+mod map;
 mod minion;
 mod player;
 mod prelude;
 
 use bullet::BulletPlugin;
 use enemy::EnemyPlugin;
+use map::MapPlugin;
 use minion::*;
 use player::PlayerPlugin;
 use prelude::*;
@@ -27,10 +29,9 @@ pub enum GameState {
 }
 
 #[derive(AssetCollection)]
-pub struct ImageAssets {
+pub struct OurAssets {
     #[asset(path = "awesome.png")]
     pub placeholder: Handle<Image>,
-
     #[asset(path = "awesome.png")]
     pub enemy_placeholder: Handle<Image>,
 
@@ -39,6 +40,8 @@ pub struct ImageAssets {
 
     #[asset(path = "awesome.png")]
     pub dog_spawner: Handle<Image>,
+    #[asset(path = "main.map")]
+    pub map: Handle<Map>,
 }
 
 fn main() {
@@ -46,10 +49,14 @@ fn main() {
 
     AssetLoader::new(GameState::Splash)
         .continue_to_state(GameState::GamePlay)
-        .with_collection::<ImageAssets>()
+        .with_collection::<OurAssets>()
         .build(&mut app);
 
     app.add_state(GameState::Splash)
+        .insert_resource(AssetServerSettings {
+            watch_for_changes: true,
+            ..default()
+        })
         .insert_resource(ClearColor(CLEAR))
         .insert_resource(WindowDescriptor {
             width: HEIGHT * RESOLUTION,
@@ -64,9 +71,11 @@ fn main() {
             enabled: false,
             ..Default::default()
         })
+        .add_plugin(PhysicsPlugin::default())
         .add_plugin(PlayerPlugin)
         .add_plugin(EnemyPlugin)
         .add_plugin(BulletPlugin)
+        .add_plugin(MapPlugin)
         .add_plugin(MinionPlugin)
         .add_plugin(WorldInspectorPlugin::new())
         .add_startup_system(spawn_camera)

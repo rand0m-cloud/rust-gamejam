@@ -18,7 +18,7 @@ fn player_shoot(
     player: Query<&Transform, With<Player>>,
     keyboard: Res<Input<KeyCode>>,
     axis: Res<Axis<GamepadAxis>>,
-    assets: Res<ImageAssets>,
+    assets: Res<OurAssets>,
 ) {
     let transform = player.single();
 
@@ -52,11 +52,13 @@ fn player_shoot(
         let mut transform = *transform;
         transform.translation.z += 1.0;
 
+        let size = 0.1;
+
         commands
             .spawn_bundle(SpriteBundle {
                 sprite: Sprite {
                     color: Color::DARK_GREEN,
-                    custom_size: Some(Vec2::splat(0.1)),
+                    custom_size: Some(Vec2::splat(size)),
                     ..default()
                 },
                 texture: assets.placeholder.clone(),
@@ -66,7 +68,16 @@ fn player_shoot(
             .insert(Bullet {
                 speed: 0.2,
                 direction: target_dir,
-            });
+            })
+            .insert(RigidBody::Sensor)
+            .insert(CollisionShape::Sphere { radius: size / 2.0 })
+            .insert(RotationConstraints::lock())
+            .insert(
+                CollisionLayers::all_masks::<Layer>()
+                    .with_group(Layer::Bullet)
+                    .without_mask(Layer::Bullet)
+                    .without_mask(Layer::Player),
+            );
     }
 }
 
@@ -102,16 +113,25 @@ fn player_movement(
     }
 }
 
-fn spawn_player(mut commands: Commands, assets: Res<ImageAssets>) {
+fn spawn_player(mut commands: Commands, assets: Res<OurAssets>) {
+    let size = 1.0;
     commands
         .spawn_bundle(SpriteBundle {
             texture: assets.placeholder.clone(),
             sprite: Sprite {
-                custom_size: Some(Vec2::splat(1.0)),
+                custom_size: Some(Vec2::splat(size)),
                 ..default()
             },
             ..default()
         })
         .insert(Player)
-        .insert(MovementStats { speed: 0.5 });
+        .insert(MovementStats { speed: 0.5 })
+        .insert(RigidBody::Dynamic)
+        .insert(CollisionShape::Sphere { radius: size / 2.0 })
+        .insert(RotationConstraints::lock())
+        .insert(
+            CollisionLayers::all_masks::<Layer>()
+                .with_group(Layer::Player)
+                .without_mask(Layer::Bullet),
+        );
 }

@@ -1,0 +1,14 @@
+Map (
+    rects: [
+        Rect (
+            position: Vec2(0.1,0.4),
+            size: Vec2(0.1,0.4),
+            rotation: 10.0
+            ),
+        Rect (
+            position: Vec2(-0.3,0.4),
+            size: Vec2(0.4,0.4),
+            rotation: 45.0
+            )
+        ]
+)
