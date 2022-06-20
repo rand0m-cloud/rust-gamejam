@@ -1,8 +1,6 @@
-use std::{f32::consts::PI, fs};
+use std::fs;
 
-use bevy::utils::HashMap;
 use bevy_asset_loader::AssetCollection;
-use ron::from_str;
 use serde::Deserialize;
 
 use crate::prelude::*;
@@ -91,10 +89,10 @@ fn load_graphics(
 ) {
     let chicken_desc = fs::read_to_string("assets/chicken_walk.ron").unwrap();
 
-    let chicken: GraphicsDesc = from_str(&chicken_desc).unwrap_or_else(|e| {
-        println!("Failed to load config: {}", e);
-        std::process::exit(1);
+    let chicken: GraphicsDesc = ron::from_str(&chicken_desc).unwrap_or_else(|e| {
+        panic!("Failed to load config: {}", e);
     });
+
     //unwrap safe because asset loader
     let image = images.get(assets.chicken.clone()).unwrap();
 

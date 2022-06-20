@@ -1,7 +1,7 @@
 #![allow(clippy::type_complexity)]
 
 use bevy::{asset::AssetServerSettings, render::camera::ScalingMode, window::PresentMode};
-use bevy_asset_loader::{AssetCollection, AssetLoader};
+use bevy_asset_loader::AssetLoader;
 use bevy_inspector_egui::{WorldInspectorParams, WorldInspectorPlugin};
 
 pub const CLEAR: Color = Color::rgb(0.3, 0.3, 0.3);
