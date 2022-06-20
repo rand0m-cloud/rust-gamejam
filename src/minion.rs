@@ -15,7 +15,7 @@ impl Plugin for MinionPlugin {
     }
 }
 
-pub fn spawn_initial_spawners(mut commands: Commands, assets: Res<ImageAssets>) {
+pub fn spawn_initial_spawners(mut commands: Commands, assets: Res<OurAssets>) {
     let chicken_spawner_locations = [(-1.0, 0.0), (-0.8, 0.1)]
         .into_iter()
         .map(Vec2::from)
@@ -41,7 +41,7 @@ pub fn spawn_initial_spawners(mut commands: Commands, assets: Res<ImageAssets>) 
 
 fn spawn_minion(
     commands: &mut Commands,
-    assets: &Res<ImageAssets>,
+    assets: &Res<OurAssets>,
     minion_type: ChickenOrDog,
     spawn_location: Vec2,
 ) {
@@ -50,12 +50,14 @@ fn spawn_minion(
         ChickenOrDog::Dog => (Color::SALMON, assets.dog_spawner.clone()),
     };
 
+    let size = 0.25;
+
     commands
         .spawn_bundle(SpriteBundle {
             texture,
             sprite: Sprite {
                 color,
-                custom_size: Some(Vec2::splat(0.25)),
+                custom_size: Some(Vec2::splat(size)),
                 ..default()
             },
             transform: Transform::from_translation(Vec3::new(
@@ -67,12 +69,16 @@ fn spawn_minion(
         })
         .insert(MovementStats { speed: 0.1 })
         .insert(minion_type)
-        .insert(Minion);
+        .insert(Minion)
+        .insert(RigidBody::Dynamic)
+        .insert(CollisionShape::Sphere { radius: size / 2.0 })
+        .insert(RotationConstraints::lock())
+        .insert(CollisionLayers::all_masks::<Layer>().with_group(Layer::Enemy));
 }
 
 fn spawn_minion_spawners(
     commands: &mut Commands,
-    assets: &Res<ImageAssets>,
+    assets: &Res<OurAssets>,
     minion_type: ChickenOrDog,
     spawn_locations: Vec<Vec2>,
 ) {
@@ -146,7 +152,7 @@ pub fn minions_ai(
 
 pub fn minions_spawner_ai(
     mut commands: Commands,
-    assets: Res<ImageAssets>,
+    assets: Res<OurAssets>,
     mut spawners_query: Query<(&mut Spawner, &GlobalTransform, &ChickenOrDog), With<Minion>>,
     time: Res<Time>,
 ) {
