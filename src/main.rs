@@ -1,10 +1,6 @@
 #![allow(clippy::type_complexity)]
 
-use bevy::{
-    asset::AssetServerSettings,
-    render::camera::{Camera2d, ScalingMode},
-    window::PresentMode,
-};
+use bevy::{asset::AssetServerSettings, render::camera::ScalingMode, window::PresentMode};
 use bevy_asset_loader::AssetLoader;
 use bevy_inspector_egui::{WorldInspectorParams, WorldInspectorPlugin};
 
