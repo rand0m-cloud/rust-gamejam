@@ -1,19 +1,7 @@
-Map (
+
+(
     rects: [
-        Rect (
-            position: Vec2(0.1,0.4),
-            size: Vec2(0.1,0.4),
-            rotation: 10.0
-            ),
-        Rect (
-            position: Vec2(-0.3,0.4),
-            size: Vec2(0.4,0.4),
-            rotation: 45.0
-            ),
-        Rect (
-            position: Vec2(-0.3,-0.4),
-            size: Vec2(0.9,0.4),
-            rotation: 90.0
-            )
-        ]
+        (position:(1.1,0.5),size:(1.5,1),rotation:45.836628),// [0]
+        (position:(-1,0),size:(1,1.8),rotation:0),
+    ],
 )
