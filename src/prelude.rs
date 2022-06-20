@@ -1,12 +1,21 @@
 pub use bevy::prelude::*;
+pub use heron::prelude::*;
 
-pub use crate::{GameState, ImageAssets};
+pub use crate::{map::Map, GameState, OurAssets};
 
 #[derive(Component)]
 pub struct Player;
 
 #[derive(Component)]
 pub struct Enemy;
+
+#[derive(PhysicsLayer)]
+pub enum Layer {
+    Bullet,
+    Enemy,
+    Player,
+    Wall,
+}
 
 #[derive(Component)]
 pub struct MovementStats {

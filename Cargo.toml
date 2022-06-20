@@ -1,6 +1,6 @@
 [package]
 name = "rust-gamejam"
-version = "0.0.1"
+version = "0.0.2"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -19,6 +19,11 @@ bevy = { version = "0.7", features = [
      ] }
 bevy-inspector-egui = "0.11"
 bevy_asset_loader = { version = "0.11", features = ["2d"] }
+heron = { version = "3.1", features = ["2d", "debug-2d"]}
+anyhow = "1.0.4"
+rand = "0.8.0"
+ron = "0.7.0"
+serde = { version = "1", features = ["derive"] }
 
 [features]
 default = ["fast-compile"]

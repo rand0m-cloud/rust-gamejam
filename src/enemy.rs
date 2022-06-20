@@ -8,10 +8,12 @@ impl Plugin for EnemyPlugin {
     }
 }
 
-pub fn spawn_enemies(mut commands: Commands, assets: Res<ImageAssets>) {
+pub fn spawn_enemies(mut commands: Commands, assets: Res<OurAssets>) {
     let spawn_locations = [(-0.5, 0.5), (0.5, 0.5), (0.0, 1.0)]
         .into_iter()
         .map(Vec2::from);
+
+    let size = 0.25;
 
     for spawn_location in spawn_locations {
         commands
@@ -19,7 +21,7 @@ pub fn spawn_enemies(mut commands: Commands, assets: Res<ImageAssets>) {
                 texture: assets.placeholder.clone(),
                 sprite: Sprite {
                     color: Color::BLUE,
-                    custom_size: Some(Vec2::splat(0.25)),
+                    custom_size: Some(Vec2::splat(size)),
                     ..default()
                 },
                 transform: Transform::from_translation(Vec3::new(
@@ -30,7 +32,11 @@ pub fn spawn_enemies(mut commands: Commands, assets: Res<ImageAssets>) {
                 ..default()
             })
             .insert(Enemy {})
-            .insert(MovementStats { speed: 0.1 });
+            .insert(MovementStats { speed: 0.1 })
+            .insert(RigidBody::Dynamic)
+            .insert(CollisionShape::Sphere { radius: size / 2.0 })
+            .insert(RotationConstraints::lock())
+            .insert(CollisionLayers::all_masks::<Layer>().with_group(Layer::Enemy));
     }
 }
 
