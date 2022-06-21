@@ -273,10 +273,6 @@ fn spawner_capture_ai(
             continue;
         }
 
-        if spawner.capture_progress.abs() >= 1.0 {
-            continue;
-        }
-
         let progress_multiplier = if collisions.entities().any(|ent| player.get(ent).is_ok()) {
             1.0
         } else if collisions.entities().any(|ent| enemy.get(ent).is_ok()) {
@@ -285,8 +281,15 @@ fn spawner_capture_ai(
             0.0
         };
 
-        spawner.capture_progress +=
-            progress_multiplier * (time.delta_seconds() / spawner.capture_time);
+        let delta_progress = progress_multiplier * (time.delta_seconds() / spawner.capture_time);
+
+        if spawner.capture_progress <= -1.0 && delta_progress < 0.0 {
+            continue;
+        } else if spawner.capture_progress >= 1.0 && delta_progress > 0.0 {
+            continue;
+        }
+
+        spawner.capture_progress += delta_progress;
 
         if spawner.capture_progress <= -1.0 {
             commands.entity(spawner_ent).insert(ChickenOrDog::Dog);
