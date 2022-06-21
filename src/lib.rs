@@ -9,6 +9,7 @@ pub mod minion;
 pub mod player;
 pub mod prelude;
 pub mod spawner;
+pub mod world_ui;
 
 #[derive(Eq, PartialEq, Hash, Clone, Debug)]
 pub enum GameState {
