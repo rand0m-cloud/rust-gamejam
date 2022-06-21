@@ -1,7 +1,4 @@
-use crate::assets::ChickWalkFrames;
-use crate::minion::MinionBundle;
-use crate::prelude::*;
-
+use crate::{assets::ChickWalkFrames, minion::MinionBundle, prelude::*};
 pub struct SpawnerPlugin;
 impl Plugin for SpawnerPlugin {
     fn build(&self, app: &mut App) {
