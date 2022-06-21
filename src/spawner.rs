@@ -1,5 +1,4 @@
-use crate::minion::spawn_minion;
-use crate::prelude::*;
+use crate::{minion::spawn_minion, prelude::*};
 
 pub struct SpawnerPlugin;
 impl Plugin for SpawnerPlugin {
@@ -121,9 +120,9 @@ fn spawner_capture_ai(
 
         let delta_progress = progress_multiplier * (time.delta_seconds() / spawner.capture_time);
 
-        if spawner.capture_progress <= -1.0 && delta_progress < 0.0 {
-            continue;
-        } else if spawner.capture_progress >= 1.0 && delta_progress > 0.0 {
+        if (spawner.capture_progress <= -1.0 && delta_progress < 0.0)
+            || (spawner.capture_progress >= 1.0 && delta_progress > 0.0)
+        {
             continue;
         }
 
