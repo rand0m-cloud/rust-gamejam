@@ -1,49 +1,17 @@
 #![allow(clippy::type_complexity)]
 
 use bevy::{asset::AssetServerSettings, render::camera::ScalingMode, window::PresentMode};
-use bevy_asset_loader::{AssetCollection, AssetLoader};
+use bevy_asset_loader::AssetLoader;
 use bevy_inspector_egui::{WorldInspectorParams, WorldInspectorPlugin};
 
 pub const CLEAR: Color = Color::rgb(0.3, 0.3, 0.3);
 pub const HEIGHT: f32 = 900.0;
 pub const RESOLUTION: f32 = 16.0 / 9.0;
 
-mod bullet;
-mod enemy;
-mod map;
-mod minion;
-mod player;
-mod prelude;
-
-use bullet::BulletPlugin;
-use enemy::EnemyPlugin;
-use map::MapPlugin;
-use minion::*;
-use player::PlayerPlugin;
-use prelude::*;
-
-#[derive(Eq, PartialEq, Hash, Clone, Debug)]
-pub enum GameState {
-    Splash,
-    GamePlay,
-}
-
-#[derive(AssetCollection)]
-pub struct OurAssets {
-    #[asset(path = "awesome.png")]
-    pub placeholder: Handle<Image>,
-    #[asset(path = "awesome.png")]
-    pub enemy_placeholder: Handle<Image>,
-
-    #[asset(path = "awesome.png")]
-    pub chicken_spawner: Handle<Image>,
-
-    #[asset(path = "awesome.png")]
-    pub dog_spawner: Handle<Image>,
-
-    #[asset(path = "main.map")]
-    pub map: Handle<Map>,
-}
+use rust_gamejam::{
+    assets::GameAssetsPlugin, bullet::BulletPlugin, enemy::EnemyPlugin, external::ExternalPlugin,
+    map::MapPlugin, minion::*, player::PlayerPlugin, prelude::*, spawner::SpawnerPlugin,
+};
 
 fn main() {
     let mut app = App::new();
@@ -77,8 +45,11 @@ fn main() {
         .add_plugin(EnemyPlugin)
         .add_plugin(BulletPlugin)
         .add_plugin(MapPlugin)
+        .add_plugin(GameAssetsPlugin)
         .add_plugin(MinionPlugin)
         .add_plugin(WorldInspectorPlugin::new())
+        .add_plugin(ExternalPlugin)
+        .add_plugin(SpawnerPlugin)
         .add_startup_system(spawn_camera)
         .add_system(toggle_inspector)
         .run();

@@ -1,7 +1,8 @@
 [package]
 name = "rust-gamejam"
-version = "0.0.2"
+version = "0.0.3"
 edition = "2021"
+default-run = "game"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -19,11 +20,22 @@ bevy = { version = "0.7", features = [
      ] }
 bevy-inspector-egui = "0.11"
 bevy_asset_loader = { version = "0.11", features = ["2d"] }
-heron = { version = "3.1", features = ["2d", "debug-2d"]}
+heron = { version = "3.1", features = ["2d"]}
 anyhow = "1.0.4"
 rand = "0.8.0"
 ron = "0.7.0"
 serde = { version = "1", features = ["derive"] }
+
+[lib]
+path = "src/lib.rs"
+
+[[bin]]
+name = "mapping"
+path = "bin/mapping.rs"
+
+[[bin]]
+name = "game"
+path = "src/main.rs"
 
 [features]
 default = ["fast-compile"]

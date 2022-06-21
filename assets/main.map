@@ -9,6 +9,11 @@ Map (
             position: Vec2(-0.3,0.4),
             size: Vec2(0.4,0.4),
             rotation: 45.0
+            ),
+        Rect (
+            position: Vec2(-0.3,-0.4),
+            size: Vec2(0.9,0.4),
+            rotation: 90.0
             )
         ]
 )
