@@ -2,7 +2,7 @@
 name = "rust-gamejam"
 version = "0.0.2"
 edition = "2021"
-default-run = "rust_gamejam"
+default-run = "game"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -34,7 +34,7 @@ name = "mapping"
 path = "bin/mapping.rs"
 
 [[bin]]
-name = "rust_gamejam"
+name = "game"
 path = "src/main.rs"
 
 [features]
