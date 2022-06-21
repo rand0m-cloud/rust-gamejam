@@ -1,5 +1,7 @@
+pub use crate::external::collisions::Collisions;
 pub use anyhow::Context;
 pub use bevy::prelude::*;
+use bevy::utils::Duration;
 pub use heron::prelude::*;
 
 pub use crate::{assets::OurAssets, map::Map, GameState};
@@ -21,6 +23,7 @@ pub enum Layer {
     Enemy,
     Player,
     Wall,
+    CaptureArea,
 
     // only for sanity checks, default physics layers is all layers and masks
     None,
@@ -61,13 +64,24 @@ pub enum ChickenOrDog {
     Dog,
 }
 
-#[derive(Component)]
+#[derive(Component, Reflect)]
+#[reflect(Component)]
 pub struct Spawner {
-    pub timer: Timer,
-    pub capture_time: f64,
+    pub spawn_timer: Timer,
+    pub capture_time: f32,
     // -1.0 < progress < 1.0
     // negative means the enemy won the objective
-    pub capture_progress: f64,
+    pub capture_progress: f32,
+}
+
+impl Default for Spawner {
+    fn default() -> Self {
+        Self {
+            spawn_timer: Timer::new(Duration::from_secs_f32(5.0), true),
+            capture_progress: 0.0,
+            capture_time: 5.0,
+        }
+    }
 }
 
 /// Checks if a collision event contains a bullet. If so, return the entities with the bullet as the first entity

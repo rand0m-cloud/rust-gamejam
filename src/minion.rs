@@ -1,5 +1,4 @@
 use crate::prelude::*;
-use bevy::utils::Duration;
 use serde::{Deserialize, Serialize};
 
 pub struct MinionPlugin;
@@ -11,8 +10,10 @@ impl Plugin for MinionPlugin {
         .add_system_set(
             SystemSet::on_update(GameState::GamePlay)
                 .with_system(minions_spawner_ai)
-                .with_system(minions_ai),
-        );
+                .with_system(minions_ai)
+                .with_system(spawner_capture_ai),
+        )
+        .register_type::<Spawner>();
     }
 }
 
@@ -188,12 +189,17 @@ fn spawn_minion_spawners(
                 )),
                 ..default()
             })
-            .insert(MovementStats { speed: 0.1 })
-            .insert(minion_type)
             .insert(Minion)
-            .insert(Spawner {
-                timer: Timer::new(Duration::from_secs_f32(5.0), true),
-            });
+            .insert(Spawner::default())
+            .insert(RigidBody::Sensor)
+            .insert(CollisionShape::Sphere { radius: 0.2 })
+            .insert(
+                CollisionLayers::none()
+                    .with_group(Layer::CaptureArea)
+                    .with_masks(&[Layer::Player, Layer::Enemy]),
+            )
+            .insert(crate::external::collisions::Collisions::default())
+            .insert(Name::new("Spawner"));
     }
 }
 
@@ -243,14 +249,49 @@ pub fn minions_spawner_ai(
     time: Res<Time>,
 ) {
     for (mut spawner, transform, chicken_or_dog) in spawners_query.iter_mut() {
-        spawner.timer.tick(time.delta());
-        if spawner.timer.just_finished() {
+        spawner.spawn_timer.tick(time.delta());
+        if spawner.spawn_timer.just_finished() {
             spawn_minion(
                 &mut commands,
                 &assets,
                 *chicken_or_dog,
                 transform.translation.truncate(),
             );
+        }
+    }
+}
+
+fn spawner_capture_ai(
+    mut commands: Commands,
+    mut spawners: Query<(&Collisions, &mut Spawner, Entity)>,
+    player: Query<&Player, Without<Minion>>,
+    enemy: Query<&Enemy, Without<Minion>>,
+    time: Res<Time>,
+) {
+    for (collisions, mut spawner, spawner_ent) in spawners.iter_mut() {
+        if collisions.is_empty() {
+            continue;
+        }
+
+        if spawner.capture_progress.abs() >= 1.0 {
+            continue;
+        }
+
+        let progress_multiplier = if collisions.entities().any(|ent| player.get(ent).is_ok()) {
+            1.0
+        } else if collisions.entities().any(|ent| enemy.get(ent).is_ok()) {
+            -1.0
+        } else {
+            0.0
+        };
+
+        spawner.capture_progress +=
+            progress_multiplier * (time.delta_seconds() / spawner.capture_time);
+
+        if spawner.capture_progress <= -1.0 {
+            commands.entity(spawner_ent).insert(ChickenOrDog::Dog);
+        } else if spawner.capture_progress >= 1.0 {
+            commands.entity(spawner_ent).insert(ChickenOrDog::Chicken);
         }
     }
 }
