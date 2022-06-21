@@ -44,7 +44,7 @@ impl Collisions {
     }
 }
 
-/// Adds entity to [`CollidingEntities`] on starting collision and removes from it when the
+/// Adds entity to CollidingEntities on starting collision and removes from it when the
 /// collision end.
 pub fn update_collisions_system(
     mut collision_events: EventReader<'_, '_, CollisionEvent>,
