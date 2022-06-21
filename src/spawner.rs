@@ -1,7 +1,10 @@
-use crate::world_ui::spawn_quad;
-use crate::world_ui::BarMaterial;
-use crate::world_ui::Percentage;
-use crate::{assets::ChickWalkFrames, minion::MinionBundle, prelude::*};
+use crate::{
+    assets::ChickWalkFrames,
+    minion::MinionBundle,
+    prelude::*,
+    world_ui::{spawn_quad, BarMaterial, Percentage},
+};
+
 pub struct SpawnerPlugin;
 impl Plugin for SpawnerPlugin {
     fn build(&self, app: &mut App) {
