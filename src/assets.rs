@@ -121,7 +121,7 @@ fn parse_animation(file_name: &str, atlas: &mut TextureAtlas) -> Vec<TextureAtla
 
 fn load_graphics(
     mut commands: Commands,
-    mut assets: ResMut<OurAssets>,
+    assets: ResMut<OurAssets>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
     images: Res<Assets<Image>>,
 ) {
@@ -131,13 +131,16 @@ fn load_graphics(
 
     let chick_image = images.get(assets.chicken_minion.clone()).unwrap();
     let mut chick_atlas =
-        TextureAtlas::new_empty(assets.chicken_minion.clone(), chicken_image.size());
+        TextureAtlas::new_empty(assets.chicken_minion.clone(), chick_image.size());
 
     let chicken_walk = parse_animation("assets/chicken_walk.ron", &mut chicken_atlas);
-    let chicken_shoot = parse_animation("assets/chicken_shoot.ron", &mut chicken_atlas);
-
     let chick_walk = parse_animation("assets/chick_walk.ron", &mut chick_atlas);
-    let chick_attack = parse_animation("assets/chick_attack.ron", &mut chick_atlas);
+
+    #[cfg(off)]
+    {
+        let chicken_shoot = parse_animation("assets/chicken_shoot.ron", &mut chicken_atlas);
+        let chick_attack = parse_animation("assets/chick_attack.ron", &mut chick_atlas);
+    }
 
     let chicken_handle = texture_atlases.add(chicken_atlas);
     let chick_handle = texture_atlases.add(chick_atlas);
