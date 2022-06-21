@@ -21,8 +21,7 @@ pub struct BarMaterialPlugin;
 impl Plugin for BarMaterialPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugin(Material2dPlugin::<BarMaterial>::default())
-            .register_inspectable::<Percentage>()
-            .add_startup_system(spawn_quad);
+            .register_inspectable::<Percentage>();
 
         // Add all render world systems/resources
         app.sub_app_mut(RenderApp)
@@ -34,7 +33,7 @@ impl Plugin for BarMaterialPlugin {
 
 #[derive(TypeUuid, Clone)]
 #[uuid = "bc2f08eb-a0fb-43f1-a908-54871ea597d5"]
-struct BarMaterial {
+pub struct BarMaterial {
     percentage: f32,
     color_1: Color,
     color_2: Color,
@@ -42,23 +41,23 @@ struct BarMaterial {
 
 // Holds the version of our data that can be sent to the graphics card (ie Color -> Vec4)
 #[derive(Clone, AsStd140)]
-struct BarMaterialUniformData {
+pub struct BarMaterialUniformData {
     percentage: f32,
     color_1: Vec4,
     color_2: Vec4,
 }
 
 #[derive(Component, Clone, Copy, Inspectable)]
-struct Percentage {
+pub struct Percentage {
     #[inspectable(min = -1.0, max = 1.0)]
-    value: f32,
+    pub value: f32,
 }
 
-fn spawn_quad(
-    mut commands: Commands,
-    mut mesh_assets: ResMut<Assets<Mesh>>,
-    mut my_material_assets: ResMut<Assets<BarMaterial>>,
-) {
+pub fn spawn_quad(
+    commands: &mut Commands,
+    mesh_assets: &mut ResMut<Assets<Mesh>>,
+    my_material_assets: &mut ResMut<Assets<BarMaterial>>,
+) -> Entity {
     commands
         .spawn_bundle(MaterialMesh2dBundle {
             mesh: mesh_assets.add(Mesh::from(shape::Quad::default())).into(),
@@ -68,13 +67,14 @@ fn spawn_quad(
                 color_2: Color::GREEN,
             }),
             transform: Transform {
-                translation: bevy::prelude::Vec3::new(-0.6, 0.0, 999.0),
-                scale: bevy::prelude::Vec3::new(1.0, 0.2, 1.0),
+                translation: bevy::prelude::Vec3::new(0.0, 0.15, 0.0),
+                scale: bevy::prelude::Vec3::new(0.3, 0.05, 1.0),
                 ..Default::default()
             },
             ..default()
         })
-        .insert(Percentage { value: 0.7 });
+        .insert(Percentage { value: 0.0 })
+        .id()
 }
 
 struct ExtractedTime {
@@ -121,7 +121,7 @@ fn prepare_my_material(
 }
 
 // The PreparedAsset created from our material
-struct MyMaterialGPU {
+pub struct MyMaterialGPU {
     bind_group: BindGroup,
     uniform_data: BarMaterialUniformData,
     buffer: Buffer,
