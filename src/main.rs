@@ -9,8 +9,8 @@ pub const HEIGHT: f32 = 900.0;
 pub const RESOLUTION: f32 = 16.0 / 9.0;
 
 use rust_gamejam::{
-    assets::GameAssetsPlugin, bullet::BulletPlugin, enemy::EnemyPlugin, map::MapPlugin, minion::*,
-    player::PlayerPlugin, prelude::*,
+    assets::GameAssetsPlugin, bullet::BulletPlugin, enemy::EnemyPlugin, external::ExternalPlugin,
+    map::MapPlugin, minion::*, player::PlayerPlugin, prelude::*, spawner::SpawnerPlugin,
 };
 
 fn main() {
@@ -48,6 +48,8 @@ fn main() {
         .add_plugin(GameAssetsPlugin)
         .add_plugin(MinionPlugin)
         .add_plugin(WorldInspectorPlugin::new())
+        .add_plugin(ExternalPlugin)
+        .add_plugin(SpawnerPlugin)
         .add_startup_system(spawn_camera)
         .add_system(toggle_inspector)
         .run();
