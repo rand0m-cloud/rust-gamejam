@@ -18,6 +18,8 @@ pub struct Rect {
 #[uuid = "615963e9-3a3d-4eaa-bed3-76e8f05a1070"]
 pub struct Map {
     pub rects: Vec<Rect>,
+    pub spawn_locations: Vec<(Vec2, ChickenOrDog)>,
+    pub player_spawn: Vec2,
 }
 
 pub struct MapPlugin;

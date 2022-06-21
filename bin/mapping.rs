@@ -3,21 +3,36 @@
 use std::fs;
 
 use bevy::{
-    input::mouse::MouseWheel, prelude::*, render::camera::ScalingMode, window::PresentMode,
+    input::mouse::MouseWheel, prelude::*, render::camera::ScalingMode,
+    sprite::MaterialMesh2dBundle, window::PresentMode,
 };
 use bevy_inspector_egui::{WorldInspectorParams, WorldInspectorPlugin};
 use ron::ser::{to_string_pretty, PrettyConfig};
+
+use bevy_mod_picking::*;
 
 pub const CLEAR: Color = Color::rgb(0.3, 0.3, 0.3);
 pub const HEIGHT: f32 = 900.0;
 pub const RESOLUTION: f32 = 16.0 / 9.0;
 
-use rust_gamejam::map::{Map, Rect};
+use rust_gamejam::{
+    map::{Map, Rect},
+    prelude::ChickenOrDog,
+};
 
 #[derive(Component)]
-pub struct MapSquare;
+struct WallSquare;
+#[derive(Component)]
+struct PlayerSpawn;
+#[derive(Component)]
+struct Spawner;
 
-fn save_map(map: Query<&Transform, With<MapSquare>>, input: Res<Input<KeyCode>>) {
+fn save_map(
+    map: Query<&Transform, With<WallSquare>>,
+    spawners_query: Query<(&Transform, &ChickenOrDog), With<Spawner>>,
+    player_spawn: Query<&Transform, With<PlayerSpawn>>,
+    input: Res<Input<KeyCode>>,
+) {
     if input.just_pressed(KeyCode::Return) {
         let mut rects = Vec::new();
         for transform in map.iter() {
@@ -28,7 +43,17 @@ fn save_map(map: Query<&Transform, With<MapSquare>>, input: Res<Input<KeyCode>>)
             });
         }
 
-        let data = Map { rects };
+        let mut spawn_locations = Vec::new();
+        for (transform, chicken) in spawners_query.iter() {
+            spawn_locations.push((transform.translation.truncate(), *chicken));
+        }
+        let player_spawn = player_spawn.single().translation.truncate();
+
+        let data = Map {
+            rects,
+            spawn_locations,
+            player_spawn,
+        };
 
         let pretty = PrettyConfig::new()
             .depth_limit(2)
@@ -40,34 +65,69 @@ fn save_map(map: Query<&Transform, With<MapSquare>>, input: Res<Input<KeyCode>>)
         println!("SAVED");
     }
 }
-fn change_selection(
-    changed: Query<Entity, (Changed<Transform>, With<MapSquare>)>,
-    mut selection: ResMut<Selection>,
-) {
-    for ent in changed.iter() {
-        selection.entity = ent;
-    }
-}
 
-fn load_map(mut commands: Commands, mut selection: ResMut<Selection>) {
+fn load_map(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+) {
     if let Ok(map) =
         ron::de::from_str::<Map>(&fs::read_to_string("assets/main.map").unwrap_or_default())
     {
         for rect in &map.rects {
-            selection.entity = commands
-                .spawn_bundle(SpriteBundle {
+            commands
+                .spawn_bundle(MaterialMesh2dBundle {
+                    mesh: meshes.add(Mesh::from(shape::Quad::default())).into(),
+                    material: materials.add(ColorMaterial::from(Color::WHITE)),
                     transform: Transform {
-                        translation: rect.position.extend(0.0),
+                        translation: rect.position.extend(1.0),
                         //rotation: Quat::from_axis_angle(Vec3::Z, rect.rotation),
                         rotation: Quat::from_euler(EulerRot::XYZ, 0.0, 0.0, rect.rotation),
-                        scale: rect.size.extend(0.0),
+                        scale: rect.size.extend(1.0),
                     },
                     ..default()
                 })
-                .insert(MapSquare)
+                .insert(WallSquare)
                 .insert(Name::new("Wall"))
-                .id();
+                .insert_bundle(PickableBundle::default());
         }
+        for spawners in &map.spawn_locations {
+            let color = match spawners.1 {
+                ChickenOrDog::Chicken => Color::YELLOW,
+                ChickenOrDog::Dog => Color::CRIMSON,
+            };
+            commands
+                .spawn_bundle(MaterialMesh2dBundle {
+                    mesh: meshes.add(Mesh::from(shape::Quad::default())).into(),
+                    material: materials.add(ColorMaterial::from(color)),
+                    transform: Transform {
+                        translation: spawners.0.extend(2.2),
+                        //rotation: Quat::from_axis_angle(Vec3::Z, rect.rotation),
+                        scale: Vec3::splat(0.1),
+                        ..Default::default()
+                    },
+                    ..default()
+                })
+                .insert(Spawner)
+                .insert(spawners.1)
+                .insert(Name::new("Wall"))
+                .insert_bundle(PickableBundle::default());
+        }
+        commands
+            .spawn_bundle(MaterialMesh2dBundle {
+                mesh: meshes.add(Mesh::from(shape::Quad::default())).into(),
+                material: materials.add(ColorMaterial::from(Color::GREEN)),
+                transform: Transform {
+                    translation: map.player_spawn.extend(0.1),
+                    scale: Vec3::splat(0.1),
+                    //rotation: Quat::from_axis_angle(Vec3::Z, rect.rotation),
+                    ..Default::default()
+                },
+                ..default()
+            })
+            .insert(PlayerSpawn)
+            .insert(Name::new("Wall"))
+            .insert_bundle(PickableBundle::default());
     }
 }
 
@@ -88,84 +148,113 @@ fn main() {
             despawnable_entities: true,
             ..Default::default()
         })
-        .insert_resource(Selection {
-            entity: Entity::from_raw(0),
-        })
         .add_plugin(WorldInspectorPlugin::new())
         .add_startup_system(spawn_camera)
         .add_startup_system(load_map)
         .add_system(toggle_inspector)
         .add_system(save_map)
         .add_system(fly_camera)
+        .add_plugins(DefaultPickingPlugins)
+        .add_plugin(DebugEventsPickingPlugin)
         .add_system(create_square)
         .add_system(move_selected)
-        .add_system(color_selected)
-        .add_system(change_selection)
         .run();
-}
-
-pub struct Selection {
-    entity: Entity,
 }
 
 fn create_square(
     mut commands: Commands,
     input: Res<Input<KeyCode>>,
-    mut selection: ResMut<Selection>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
-    if input.just_pressed(KeyCode::Space) {
-        selection.entity = commands
-            .spawn_bundle(SpriteBundle::default())
-            .insert(MapSquare)
-            .id();
-    }
-}
-
-fn color_selected(mut sprites: Query<(Entity, &mut Sprite)>, selection: Res<Selection>) {
-    for (ent, mut sprite) in sprites.iter_mut() {
-        if ent == selection.entity {
-            sprite.color = Color::RED;
-        } else {
-            sprite.color = Color::WHITE;
-        }
+    if input.just_pressed(KeyCode::Space) && input.pressed(KeyCode::LControl) {
+        commands
+            .spawn_bundle(MaterialMesh2dBundle {
+                mesh: meshes.add(Mesh::from(shape::Quad::default())).into(),
+                material: materials.add(ColorMaterial::from(Color::PURPLE)),
+                transform: Transform::from_scale(Vec3::splat(0.1)),
+                ..default()
+            })
+            .insert(Spawner)
+            .insert(Name::new("Spawner"))
+            .insert(ChickenOrDog::Chicken)
+            .insert_bundle(PickableBundle::default());
+    } else if input.just_pressed(KeyCode::Space) {
+        commands
+            .spawn_bundle(MaterialMesh2dBundle {
+                mesh: meshes.add(Mesh::from(shape::Quad::default())).into(),
+                material: materials.add(ColorMaterial::from(Color::WHITE)),
+                ..default()
+            })
+            .insert(WallSquare)
+            .insert(Name::new("Wall"))
+            .insert_bundle(PickableBundle::default());
     }
 }
 
 fn move_selected(
-    mut transform: Query<&mut Transform>,
-    selection: Res<Selection>,
+    mut transform: Query<(
+        &mut Transform,
+        &Selection,
+        Option<&mut ChickenOrDog>,
+        &mut Handle<ColorMaterial>,
+    )>,
     input: Res<Input<KeyCode>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
-    if let Ok(mut trans) = transform.get_mut(selection.entity) {
-        if input.pressed(KeyCode::I) {
-            trans.translation.y += 0.02;
-        }
-        if input.pressed(KeyCode::K) {
-            trans.translation.y -= 0.02;
-        }
-        if input.pressed(KeyCode::J) {
-            trans.translation.x -= 0.02;
-        }
-        if input.pressed(KeyCode::L) {
-            trans.translation.x += 0.02;
-        }
-        if input.pressed(KeyCode::T) {
-            trans.scale.y += 0.02;
-        }
-        if input.pressed(KeyCode::G) {
-            trans.scale.y -= 0.02;
-        }
-        if input.pressed(KeyCode::Y) {
-            trans.scale.x += 0.02;
-        }
-        if input.pressed(KeyCode::H) {
-            trans.scale.x -= 0.02;
-        }
-        if input.pressed(KeyCode::U) {
-            trans.rotation *= Quat::from_axis_angle(Vec3::Z, 0.03);
-        }
-        if input.pressed(KeyCode::O) {
-            trans.rotation *= Quat::from_axis_angle(Vec3::Z, -0.03);
+    for (mut trans, selected, chicken, mut mat) in transform.iter_mut() {
+        if selected.selected() {
+            if input.pressed(KeyCode::I) {
+                trans.translation.y += 0.02;
+            }
+            if input.pressed(KeyCode::K) {
+                trans.translation.y -= 0.02;
+            }
+            if input.pressed(KeyCode::J) {
+                trans.translation.x -= 0.02;
+            }
+            if input.pressed(KeyCode::L) {
+                trans.translation.x += 0.02;
+            }
+            if input.pressed(KeyCode::T) {
+                trans.scale.y += 0.02;
+            }
+            if input.pressed(KeyCode::G) {
+                trans.scale.y -= 0.02;
+            }
+            if input.pressed(KeyCode::Y) {
+                trans.scale.x += 0.02;
+            }
+            if input.pressed(KeyCode::H) {
+                trans.scale.x -= 0.02;
+            }
+            if input.pressed(KeyCode::U) {
+                trans.rotation *= Quat::from_axis_angle(Vec3::Z, 0.03);
+            }
+            if input.pressed(KeyCode::O) {
+                trans.rotation *= Quat::from_axis_angle(Vec3::Z, -0.03);
+            }
+            if input.pressed(KeyCode::P) {
+                if let Some(mut chicken) = chicken {
+                    *chicken = ChickenOrDog::Dog;
+                    let color = match *chicken {
+                        ChickenOrDog::Chicken => Color::YELLOW,
+                        ChickenOrDog::Dog => Color::CRIMSON,
+                    };
+                    let color = materials.add(ColorMaterial::from(color));
+                    *mat = color;
+                }
+            } else if input.pressed(KeyCode::Semicolon) {
+                if let Some(mut chicken) = chicken {
+                    *chicken = ChickenOrDog::Chicken;
+                    let color = match *chicken {
+                        ChickenOrDog::Chicken => Color::YELLOW,
+                        ChickenOrDog::Dog => Color::CRIMSON,
+                    };
+                    let color = materials.add(ColorMaterial::from(color));
+                    *mat = color;
+                }
+            }
         }
     }
 }
@@ -206,7 +295,9 @@ fn spawn_camera(mut commands: Commands) {
 
     camera.orthographic_projection.scaling_mode = ScalingMode::None;
 
-    commands.spawn_bundle(camera);
+    commands
+        .spawn_bundle(camera)
+        .insert_bundle(PickingCameraBundle::default());
 }
 
 fn toggle_inspector(
