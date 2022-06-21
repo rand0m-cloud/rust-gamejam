@@ -4,15 +4,15 @@
 
 use bevy::{
     ecs::system::{lifetimeless::SRes, SystemParamItem},
-    //Specified to not be ambiguos with render_resourse::std140::*
     prelude::{Vec4, *},
     reflect::TypeUuid,
     render::{
-        camera::ScalingMode, render_asset::*, render_resource::std140::*, render_resource::*,
-        renderer::*, RenderApp, RenderStage,
+        render_asset::*,
+        render_resource::{std140::*, *},
+        renderer::*,
+        RenderApp, RenderStage,
     },
     sprite::*,
-    window::PresentMode,
 };
 use bevy_inspector_egui::{Inspectable, RegisterInspectable};
 
@@ -78,6 +78,7 @@ fn spawn_quad(
 }
 
 struct ExtractedTime {
+    #[allow(dead_code)]
     seconds_since_startup: f32,
 }
 
@@ -102,7 +103,6 @@ fn extract_health(
 fn prepare_my_material(
     mut material_assets: ResMut<RenderAssets<BarMaterial>>,
     percent_query: Query<(&Percentage, &Handle<BarMaterial>)>,
-    time: Res<ExtractedTime>,
     render_queue: Res<RenderQueue>,
 ) {
     for (percent, handle) in percent_query.iter() {
@@ -170,7 +170,7 @@ impl RenderAsset for BarMaterial {
 
     fn prepare_asset(
         extracted_asset: BarMaterial,
-        (render_device, pipeline, images): &mut SystemParamItem<Self::Param>,
+        (render_device, pipeline, _images): &mut SystemParamItem<Self::Param>,
     ) -> Result<MyMaterialGPU, PrepareAssetError<BarMaterial>> {
         let uniform_data = BarMaterialUniformData {
             percentage: extracted_asset.percentage,
