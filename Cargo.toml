@@ -24,6 +24,7 @@ heron = { version = "3.1", features = ["2d"]}
 anyhow = "1.0.4"
 rand = "0.8.0"
 ron = "0.7.0"
+bevy_mod_picking = "0.7"
 serde = { version = "1", features = ["derive"] }
 
 [lib]
