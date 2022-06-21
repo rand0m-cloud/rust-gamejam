@@ -29,7 +29,8 @@ pub enum Layer {
     None,
 }
 
-#[derive(Component)]
+#[derive(Component, Reflect, Default)]
+#[reflect(Component)]
 pub struct Animation {
     pub current_frame: usize,
     pub frames: Vec<usize>,

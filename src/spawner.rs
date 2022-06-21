@@ -1,5 +1,4 @@
-use crate::{minion::spawn_minion, prelude::*};
-
+use crate::{assets::ChickWalkFrames, minion::MinionBundle, prelude::*};
 pub struct SpawnerPlugin;
 impl Plugin for SpawnerPlugin {
     fn build(&self, app: &mut App) {
@@ -83,17 +82,41 @@ pub fn minions_spawner_ai(
     mut commands: Commands,
     assets: Res<OurAssets>,
     mut spawners_query: Query<(&mut Spawner, &GlobalTransform, &ChickenOrDog), With<Minion>>,
+    chick_walk: Res<ChickWalkFrames>,
     time: Res<Time>,
 ) {
     for (mut spawner, transform, chicken_or_dog) in spawners_query.iter_mut() {
         spawner.spawn_timer.tick(time.delta());
         if spawner.spawn_timer.just_finished() {
-            spawn_minion(
-                &mut commands,
-                &assets,
-                *chicken_or_dog,
-                transform.translation.truncate(),
-            );
+            match chicken_or_dog {
+                ChickenOrDog::Chicken => {
+                    let ent = MinionBundle::spawn_chicken_minion(
+                        &mut commands,
+                        &assets,
+                        transform.translation.truncate(),
+                    )
+                    .unwrap();
+                    commands
+                        .entity(ent)
+                        .insert(chick_walk.texture.clone())
+                        .insert(chick_walk.frames[0].clone())
+                        .insert(Animation {
+                            current_frame: 0,
+                            frames: chick_walk.frames.iter().map(|f| f.index).collect(),
+                            playing: true,
+                            flip_x: false,
+                            timer: Timer::from_seconds(1.0 / 10.0, true),
+                        });
+                }
+                ChickenOrDog::Dog => {
+                    let _ent = MinionBundle::spawn_dog_minion(
+                        &mut commands,
+                        &assets,
+                        transform.translation.truncate(),
+                    )
+                    .unwrap();
+                }
+            }
         }
     }
 }

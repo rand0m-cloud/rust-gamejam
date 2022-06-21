@@ -41,7 +41,8 @@ fn create_map(map_assets: Res<Assets<Map>>, our_assets: Res<OurAssets>, mut comm
                 },
                 transform: Transform {
                     translation: rect.position.extend(0.0),
-                    rotation: Quat::from_axis_angle(Vec3::Z, rect.rotation.to_radians()),
+                    //rotation: Quat::from_axis_angle(Vec3::Z, rect.rotation),
+                    rotation: Quat::from_euler(EulerRot::XYZ, 0.0, 0.0, rect.rotation),
                     ..Default::default()
                 },
                 ..default()
