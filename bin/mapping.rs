@@ -15,7 +15,10 @@ pub const CLEAR: Color = Color::rgb(0.3, 0.3, 0.3);
 pub const HEIGHT: f32 = 900.0;
 pub const RESOLUTION: f32 = 16.0 / 9.0;
 
-use rust_gamejam::map::{Map, Rect};
+use rust_gamejam::{
+    map::{Map, Rect},
+    prelude::ChickenOrDog,
+};
 
 #[derive(Component)]
 struct WallSquare;
@@ -26,7 +29,7 @@ struct Spawner;
 
 fn save_map(
     map: Query<&Transform, With<WallSquare>>,
-    spawners_query: Query<&Transform, With<Spawner>>,
+    spawners_query: Query<(&Transform, &ChickenOrDog), With<Spawner>>,
     player_spawn: Query<&Transform, With<PlayerSpawn>>,
     input: Res<Input<KeyCode>>,
 ) {
@@ -41,8 +44,8 @@ fn save_map(
         }
 
         let mut spawn_locations = Vec::new();
-        for transform in spawners_query.iter() {
-            spawn_locations.push(transform.translation.truncate());
+        for (transform, chicken) in spawners_query.iter() {
+            spawn_locations.push((transform.translation.truncate(), *chicken));
         }
         let player_spawn = player_spawn.single().translation.truncate();
 
@@ -89,12 +92,16 @@ fn load_map(
                 .insert_bundle(PickableBundle::default());
         }
         for spawners in &map.spawn_locations {
+            let color = match spawners.1 {
+                ChickenOrDog::Chicken => Color::YELLOW,
+                ChickenOrDog::Dog => Color::CRIMSON,
+            };
             commands
                 .spawn_bundle(MaterialMesh2dBundle {
                     mesh: meshes.add(Mesh::from(shape::Quad::default())).into(),
-                    material: materials.add(ColorMaterial::from(Color::PURPLE)),
+                    material: materials.add(ColorMaterial::from(color)),
                     transform: Transform {
-                        translation: spawners.extend(2.2),
+                        translation: spawners.0.extend(2.2),
                         //rotation: Quat::from_axis_angle(Vec3::Z, rect.rotation),
                         scale: Vec3::splat(0.1),
                         ..Default::default()
@@ -102,6 +109,7 @@ fn load_map(
                     ..default()
                 })
                 .insert(Spawner)
+                .insert(spawners.1)
                 .insert(Name::new("Wall"))
                 .insert_bundle(PickableBundle::default());
         }
@@ -169,6 +177,7 @@ fn create_square(
             })
             .insert(Spawner)
             .insert(Name::new("Spawner"))
+            .insert(ChickenOrDog::Chicken)
             .insert_bundle(PickableBundle::default());
     } else if input.just_pressed(KeyCode::Space) {
         commands
@@ -183,8 +192,17 @@ fn create_square(
     }
 }
 
-fn move_selected(mut transform: Query<(&mut Transform, &Selection)>, input: Res<Input<KeyCode>>) {
-    for (mut trans, selected) in transform.iter_mut() {
+fn move_selected(
+    mut transform: Query<(
+        &mut Transform,
+        &Selection,
+        Option<&mut ChickenOrDog>,
+        &mut Handle<ColorMaterial>,
+    )>,
+    input: Res<Input<KeyCode>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+) {
+    for (mut trans, selected, chicken, mut mat) in transform.iter_mut() {
         if selected.selected() {
             if input.pressed(KeyCode::I) {
                 trans.translation.y += 0.02;
@@ -215,6 +233,27 @@ fn move_selected(mut transform: Query<(&mut Transform, &Selection)>, input: Res<
             }
             if input.pressed(KeyCode::O) {
                 trans.rotation *= Quat::from_axis_angle(Vec3::Z, -0.03);
+            }
+            if input.pressed(KeyCode::P) {
+                if let Some(mut chicken) = chicken {
+                    *chicken = ChickenOrDog::Dog;
+                    let color = match *chicken {
+                        ChickenOrDog::Chicken => Color::YELLOW,
+                        ChickenOrDog::Dog => Color::CRIMSON,
+                    };
+                    let color = materials.add(ColorMaterial::from(color));
+                    *mat = color;
+                }
+            } else if input.pressed(KeyCode::Semicolon) {
+                if let Some(mut chicken) = chicken {
+                    *chicken = ChickenOrDog::Chicken;
+                    let color = match *chicken {
+                        ChickenOrDog::Chicken => Color::YELLOW,
+                        ChickenOrDog::Dog => Color::CRIMSON,
+                    };
+                    let color = materials.add(ColorMaterial::from(color));
+                    *mat = color;
+                }
             }
         }
     }
