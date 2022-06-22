@@ -3,7 +3,7 @@ use bevy::{prelude::*, utils::HashMap};
 use heron::{CollisionData, CollisionEvent};
 
 /// Component which will be filled (if present) with a list of entities with which the current entity is currently in contact.
-#[derive(Component, Default, Reflect)]
+#[derive(Component, Default, Reflect, Debug)]
 #[reflect(Component)]
 pub struct Collisions(HashMap<Entity, CollisionData>);
 

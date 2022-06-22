@@ -12,38 +12,28 @@ impl Plugin for BulletPlugin {
 }
 
 pub fn bullet_damage(mut enemies: Query<&mut Health>, mut events: EventReader<CollisionEvent>) {
-    let bullet_collisions = events
-        .iter()
-        .filter(|e| e.is_started())
-        .filter_map(is_bullet_collision);
-    for (_bullet, entity) in bullet_collisions {
-        if let Ok(mut health) = enemies.get_mut(entity) {
-            health.0 -= 1.0;
-        }
-    }
+
+    //    for (_bullet, entity) in bullet_collisions {
+    //        if let Ok(mut health) = enemies.get_mut(entity) {
+    //            health.0 -= 1.0;
+    //        }
+    //    }
 }
 
-fn delete_bullet(
-    mut commands: Commands,
-    bullets: Query<&Bullet>,
-    mut events: EventReader<CollisionEvent>,
-) {
-    let bullet_collisions = events
+fn delete_bullet(mut commands: Commands, bullets: Query<&Collisions, With<Bullet>>) {
+    let bullets_to_delete = bullets
         .iter()
-        .filter(|e| e.is_started())
-        .filter_map(is_bullet_collision);
+        .map(|collisions| collisions.entities())
+        .flatten()
+        .collect::<HashSet<_>>();
 
-    let mut bullets_to_despawn = HashSet::new();
-
-    for (bullet, entity) in bullet_collisions {
-        bullets_to_despawn.insert(bullet);
-        if bullets.get(entity).is_ok() {
-            bullets_to_despawn.insert(entity);
-        }
+    if bullets_to_delete.len() > 0 {
+        info!("bullets query: {:?}", bullets.iter().collect::<Vec<_>>());
+        info!("deleting bullets: {bullets_to_delete:?}");
     }
-
-    bullets_to_despawn
+    bullets_to_delete
         .into_iter()
+        .inspect(|ent_id| info!("deleting bullet {ent_id:?}"))
         .for_each(|ent| commands.entity(ent).despawn());
 }
 

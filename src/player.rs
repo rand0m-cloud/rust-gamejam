@@ -100,7 +100,8 @@ fn player_shoot(
                     .with_group(Layer::Bullet)
                     .without_mask(Layer::Bullet)
                     .without_mask(Layer::Player),
-            );
+            )
+            .insert(Collisions::default());
     }
 }
 
