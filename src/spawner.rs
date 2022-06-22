@@ -22,23 +22,31 @@ impl Plugin for SpawnerPlugin {
 
 pub fn spawn_initial_spawners(
     mut commands: Commands,
-    assets: Res<OurAssets>,
+    our_assets: Res<OurAssets>,
 
     mut mesh_assets: ResMut<Assets<Mesh>>,
     mut my_material_assets: ResMut<Assets<BarMaterial>>,
+
+    map: Res<Assets<Map>>,
 ) {
-    let chicken_spawner_locations = [(-1.0, 0.0), (-0.8, 0.1)]
+    let map = map.get(our_assets.map.clone()).unwrap();
+
+    let (chicken_spawner_locations, dog_spawner_locations) = map
+        .spawn_locations
+        .iter()
+        .partition::<Vec<_>, _>(|(_, minion_type)| *minion_type == ChickenOrDog::Chicken);
+    let chicken_spawner_locations = chicken_spawner_locations
         .into_iter()
-        .map(Vec2::from)
+        .map(|(location, _)| location)
         .collect();
-    let dog_spawner_locations = [(1.0, 0.0), (0.8, 0.1)]
+    let dog_spawner_locations = dog_spawner_locations
         .into_iter()
-        .map(Vec2::from)
+        .map(|(location, _)| location)
         .collect();
 
     spawn_minion_spawners(
         &mut commands,
-        &assets,
+        &our_assets,
         ChickenOrDog::Chicken,
         chicken_spawner_locations,
         &mut mesh_assets,
@@ -46,7 +54,7 @@ pub fn spawn_initial_spawners(
     );
     spawn_minion_spawners(
         &mut commands,
-        &assets,
+        &our_assets,
         ChickenOrDog::Dog,
         dog_spawner_locations,
         &mut mesh_assets,
