@@ -20,17 +20,15 @@ pub fn bullet_damage(mut enemies: Query<&mut Health>, mut events: EventReader<Co
     //    }
 }
 
-fn delete_bullet(mut commands: Commands, bullets: Query<&Collisions, With<Bullet>>) {
-    let bullets_to_delete = bullets
-        .iter()
-        .map(|collisions| collisions.entities())
-        .flatten()
-        .collect::<HashSet<_>>();
+fn delete_bullet(mut commands: Commands, bullets: Query<(&Collisions, Entity), With<Bullet>>) {
+    let bullets_to_delete = bullets.iter().filter_map(|(collisions, bullet_ent)| {
+        if !collisions.is_empty() {
+            Some(bullet_ent)
+        } else {
+            None
+        }
+    });
 
-    if bullets_to_delete.len() > 0 {
-        info!("bullets query: {:?}", bullets.iter().collect::<Vec<_>>());
-        info!("deleting bullets: {bullets_to_delete:?}");
-    }
     bullets_to_delete
         .into_iter()
         .inspect(|ent_id| info!("deleting bullet {ent_id:?}"))
