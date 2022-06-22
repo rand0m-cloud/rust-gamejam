@@ -47,9 +47,7 @@ fn delete_bullet(mut commands: Commands, bullets: Query<(&Collisions, Entity), W
         }
     });
 
-    bullets_to_delete
-        .into_iter()
-        .for_each(|ent| commands.entity(ent).despawn());
+    bullets_to_delete.for_each(|ent| commands.entity(ent).despawn());
 }
 
 fn bullet_fly(mut bullets: Query<(&mut Transform, &Bullet)>, time: Res<Time>) {
