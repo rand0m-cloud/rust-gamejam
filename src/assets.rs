@@ -39,14 +39,25 @@ pub struct OurAssets {
     pub placeholder: Handle<Image>,
     #[asset(path = "chicken.png")]
     pub chicken: Handle<Image>,
+
     #[asset(path = "chicken_minion.png")]
     pub chicken_minion: Handle<Image>,
+
+    #[asset(texture_atlas(tile_size_x = 512., tile_size_y = 512., columns = 1, rows = 1))]
+    #[asset(path = "awesome.png")]
+    pub placeholder_atlas: Handle<TextureAtlas>,
+
+    #[asset(path = "chicken_minion.png")]
+    pub dog_atlas: Handle<TextureAtlas>,
+
+    #[asset(path = "awesome.png")]
+    pub dog_spawner: Handle<Image>,
+
     #[asset(path = "awesome.png")]
     pub enemy_placeholder: Handle<Image>,
     #[asset(path = "awesome.png")]
     pub chicken_spawner: Handle<Image>,
-    #[asset(path = "awesome.png")]
-    pub dog_spawner: Handle<Image>,
+
     #[asset(path = "main.map")]
     pub map: Handle<Map>,
 }
@@ -81,26 +92,20 @@ pub struct ChickenWalkFrames {
     pub texture: Handle<TextureAtlas>,
 }
 
-fn load_graphics(
-    mut commands: Commands,
-    assets: Res<OurAssets>,
-    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
-    images: Res<Assets<Image>>,
-) {
-    let chicken_desc = fs::read_to_string("assets/chicken_walk.ron").unwrap();
+pub struct ChickWalkFrames {
+    pub frames: Vec<TextureAtlasSprite>,
+    pub texture: Handle<TextureAtlas>,
+}
 
-    let chicken: GraphicsDesc = ron::from_str(&chicken_desc).unwrap_or_else(|e| {
+fn parse_animation(file_name: &str, atlas: &mut TextureAtlas) -> Vec<TextureAtlasSprite> {
+    let desc = fs::read_to_string(file_name).unwrap();
+    let desc: GraphicsDesc = ron::from_str(&desc).unwrap_or_else(|e| {
         panic!("Failed to load config: {}", e);
     });
 
-    //unwrap safe because asset loader
-    let image = images.get(assets.chicken.clone()).unwrap();
+    let mut frames = Vec::new();
 
-    let mut atlas = TextureAtlas::new_empty(assets.chicken.clone(), image.size());
-
-    let mut chicken_walk = Vec::new();
-
-    for desc in chicken.frames.iter() {
+    for desc in desc.frames.iter() {
         let mut sprite = TextureAtlasSprite::new(atlas.add_texture(desc.to_atlas_rect()));
         //Set the size to be proportional to the source rectangle
         sprite.custom_size = Some(Vec2::new(
@@ -108,13 +113,44 @@ fn load_graphics(
             desc.size.1 / PIXEL_SIZE,
         ));
 
-        chicken_walk.push(sprite);
+        frames.push(sprite);
     }
 
-    let handle = texture_atlases.add(atlas);
+    frames
+}
+
+fn load_graphics(
+    mut commands: Commands,
+    assets: ResMut<OurAssets>,
+    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+    images: Res<Assets<Image>>,
+) {
+    //unwrap safe because asset loader
+    let chicken_image = images.get(assets.chicken.clone()).unwrap();
+    let mut chicken_atlas = TextureAtlas::new_empty(assets.chicken.clone(), chicken_image.size());
+
+    let chick_image = images.get(assets.chicken_minion.clone()).unwrap();
+    let mut chick_atlas =
+        TextureAtlas::new_empty(assets.chicken_minion.clone(), chick_image.size());
+
+    let chicken_walk = parse_animation("assets/chicken_walk.ron", &mut chicken_atlas);
+    let chick_walk = parse_animation("assets/chick_walk.ron", &mut chick_atlas);
+
+    #[cfg(off)]
+    {
+        let chicken_shoot = parse_animation("assets/chicken_shoot.ron", &mut chicken_atlas);
+        let chick_attack = parse_animation("assets/chick_attack.ron", &mut chick_atlas);
+    }
+
+    let chicken_handle = texture_atlases.add(chicken_atlas);
+    let chick_handle = texture_atlases.add(chick_atlas);
 
     commands.insert_resource(ChickenWalkFrames {
         frames: chicken_walk,
-        texture: handle,
+        texture: chicken_handle,
+    });
+    commands.insert_resource(ChickWalkFrames {
+        frames: chick_walk,
+        texture: chick_handle,
     });
 }

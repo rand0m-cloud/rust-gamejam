@@ -118,7 +118,7 @@ fn player_movement(
         let axis_ly = GamepadAxis(Gamepad(id), GamepadAxisType::LeftStickY);
 
         if let (Some(x), Some(y)) = (axis.get(axis_lx), axis.get(axis_ly)) {
-            if x > 0.01 || y > 0.01 {
+            if x.abs() > 0.01 || y.abs() > 0.01 {
                 animation.playing = true;
             }
             transform.translation.x += x * stats.speed * time.delta_seconds();
@@ -146,12 +146,20 @@ fn player_movement(
     }
 }
 
-fn spawn_player(mut commands: Commands, chicken_walk: Res<ChickenWalkFrames>) {
+fn spawn_player(
+    mut commands: Commands,
+    chicken_walk: Res<ChickenWalkFrames>,
+    map: Res<Assets<Map>>,
+    our_assets: Res<OurAssets>,
+) {
     let size = chicken_walk.frames[0].custom_size.unwrap().x;
+    let map = map.get(our_assets.map.clone()).unwrap();
+
     commands
         .spawn_bundle(SpriteSheetBundle {
             sprite: chicken_walk.frames[0].clone(),
             texture_atlas: chicken_walk.texture.clone(),
+            transform: Transform::from_translation(map.player_spawn.extend(0.0)),
             ..default()
         })
         .insert(Player {

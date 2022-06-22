@@ -3,6 +3,7 @@ pub use anyhow::Context;
 pub use bevy::prelude::*;
 use bevy::utils::Duration;
 pub use heron::prelude::*;
+use serde::{Deserialize, Serialize};
 
 pub use crate::{assets::OurAssets, map::Map, GameState};
 
@@ -29,7 +30,8 @@ pub enum Layer {
     None,
 }
 
-#[derive(Component)]
+#[derive(Component, Reflect, Default)]
+#[reflect(Component)]
 pub struct Animation {
     pub current_frame: usize,
     pub frames: Vec<usize>,
@@ -58,10 +60,16 @@ pub struct CircleCollider;
 #[derive(Component)]
 pub struct Minion;
 
-#[derive(Copy, Clone, Debug, Component, PartialEq, Eq)]
+#[derive(Copy, Clone, Debug, Component, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ChickenOrDog {
     Chicken,
     Dog,
+}
+
+impl Default for ChickenOrDog {
+    fn default() -> Self {
+        ChickenOrDog::Chicken
+    }
 }
 
 #[derive(Component, Reflect)]

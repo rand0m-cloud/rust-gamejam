@@ -1,4 +1,9 @@
-use crate::{minion::spawn_minion, prelude::*};
+use crate::{
+    assets::ChickWalkFrames,
+    minion::MinionBundle,
+    prelude::*,
+    world_ui::{spawn_quad, BarMaterial, Percentage},
+};
 
 pub struct SpawnerPlugin;
 impl Plugin for SpawnerPlugin {
@@ -15,27 +20,45 @@ impl Plugin for SpawnerPlugin {
     }
 }
 
-pub fn spawn_initial_spawners(mut commands: Commands, assets: Res<OurAssets>) {
-    let chicken_spawner_locations = [(-1.0, 0.0), (-0.8, 0.1)]
+pub fn spawn_initial_spawners(
+    mut commands: Commands,
+    our_assets: Res<OurAssets>,
+
+    mut mesh_assets: ResMut<Assets<Mesh>>,
+    mut my_material_assets: ResMut<Assets<BarMaterial>>,
+
+    map: Res<Assets<Map>>,
+) {
+    let map = map.get(our_assets.map.clone()).unwrap();
+
+    let (chicken_spawner_locations, dog_spawner_locations) = map
+        .spawn_locations
+        .iter()
+        .partition::<Vec<_>, _>(|(_, minion_type)| *minion_type == ChickenOrDog::Chicken);
+    let chicken_spawner_locations = chicken_spawner_locations
         .into_iter()
-        .map(Vec2::from)
+        .map(|(location, _)| location)
         .collect();
-    let dog_spawner_locations = [(1.0, 0.0), (0.8, 0.1)]
+    let dog_spawner_locations = dog_spawner_locations
         .into_iter()
-        .map(Vec2::from)
+        .map(|(location, _)| location)
         .collect();
 
     spawn_minion_spawners(
         &mut commands,
-        &assets,
+        &our_assets,
         ChickenOrDog::Chicken,
         chicken_spawner_locations,
+        &mut mesh_assets,
+        &mut my_material_assets,
     );
     spawn_minion_spawners(
         &mut commands,
-        &assets,
+        &our_assets,
         ChickenOrDog::Dog,
         dog_spawner_locations,
+        &mut mesh_assets,
+        &mut my_material_assets,
     );
 }
 fn spawn_minion_spawners(
@@ -43,6 +66,8 @@ fn spawn_minion_spawners(
     assets: &Res<OurAssets>,
     minion_type: ChickenOrDog,
     spawn_locations: Vec<Vec2>,
+    mesh_assets: &mut ResMut<Assets<Mesh>>,
+    my_material_assets: &mut ResMut<Assets<BarMaterial>>,
 ) {
     let (color, texture) = match minion_type {
         ChickenOrDog::Chicken => (Color::GREEN, assets.chicken_spawner.clone()),
@@ -50,6 +75,7 @@ fn spawn_minion_spawners(
     };
 
     for spawn_location in spawn_locations {
+        let ui = spawn_quad(commands, mesh_assets, my_material_assets);
         commands
             .spawn_bundle(SpriteBundle {
                 texture: texture.clone(),
@@ -75,7 +101,8 @@ fn spawn_minion_spawners(
                     .with_masks(&[Layer::Player, Layer::Enemy]),
             )
             .insert(crate::external::collisions::Collisions::default())
-            .insert(Name::new("Spawner"));
+            .insert(Name::new("Spawner"))
+            .add_child(ui);
     }
 }
 
@@ -83,29 +110,54 @@ pub fn minions_spawner_ai(
     mut commands: Commands,
     assets: Res<OurAssets>,
     mut spawners_query: Query<(&mut Spawner, &GlobalTransform, &ChickenOrDog), With<Minion>>,
+    chick_walk: Res<ChickWalkFrames>,
     time: Res<Time>,
 ) {
     for (mut spawner, transform, chicken_or_dog) in spawners_query.iter_mut() {
         spawner.spawn_timer.tick(time.delta());
         if spawner.spawn_timer.just_finished() {
-            spawn_minion(
-                &mut commands,
-                &assets,
-                *chicken_or_dog,
-                transform.translation.truncate(),
-            );
+            match chicken_or_dog {
+                ChickenOrDog::Chicken => {
+                    let ent = MinionBundle::spawn_chicken_minion(
+                        &mut commands,
+                        &assets,
+                        transform.translation.truncate(),
+                    )
+                    .unwrap();
+                    commands
+                        .entity(ent)
+                        .insert(chick_walk.texture.clone())
+                        .insert(chick_walk.frames[0].clone())
+                        .insert(Animation {
+                            current_frame: 0,
+                            frames: chick_walk.frames.iter().map(|f| f.index).collect(),
+                            playing: true,
+                            flip_x: false,
+                            timer: Timer::from_seconds(1.0 / 10.0, true),
+                        });
+                }
+                ChickenOrDog::Dog => {
+                    let _ent = MinionBundle::spawn_dog_minion(
+                        &mut commands,
+                        &assets,
+                        transform.translation.truncate(),
+                    )
+                    .unwrap();
+                }
+            }
         }
     }
 }
 
 fn spawner_capture_ai(
     mut commands: Commands,
-    mut spawners: Query<(&Collisions, &mut Spawner, Entity)>,
+    mut spawners: Query<(&Collisions, &mut Spawner, Entity, &Children)>,
+    mut ui_query: Query<&mut Percentage>,
     player: Query<&Player, Without<Minion>>,
     enemy: Query<&Enemy, Without<Minion>>,
     time: Res<Time>,
 ) {
-    for (collisions, mut spawner, spawner_ent) in spawners.iter_mut() {
+    for (collisions, mut spawner, spawner_ent, spawner_children) in spawners.iter_mut() {
         if collisions.is_empty() {
             continue;
         }
@@ -127,6 +179,12 @@ fn spawner_capture_ai(
         }
 
         spawner.capture_progress += delta_progress;
+
+        for child in spawner_children.iter() {
+            if let Ok(mut percentage) = ui_query.get_mut(*child) {
+                percentage.value = spawner.capture_progress;
+            }
+        }
 
         if spawner.capture_progress <= -1.0 {
             commands.entity(spawner_ent).insert(ChickenOrDog::Dog);
