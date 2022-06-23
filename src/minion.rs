@@ -123,9 +123,8 @@ impl MinionBundle {
 }
 
 /// # Minion AI
-/// - Minions look first for the closest enemy and enemy minion
-/// - Next, they look for the closest spawner to be captured
-/// - Lastly, they follow the player
+/// - Minions look for the closest enemy, enemy minion, or capturable spawner
+/// - If there is no other targets, they follow the player
 pub fn minions_ai(
     mut minion_query: Query<
         (
@@ -181,28 +180,22 @@ pub fn minions_ai(
                 }
             });
 
-        let target_position = match minion_type {
-            ChickenOrDog::Chicken => {
-                if let Some(closest_enemy) =
-                    find_closest(position, enemy_query.iter().cloned().chain(enemy_minions))
-                {
-                    closest_enemy
-                } else if let Some(closest_spawner) = find_closest(position, spawners_to_capture) {
-                    closest_spawner
-                } else {
-                    player_query.single().translation
-                }
-            }
-            ChickenOrDog::Dog => {
-                if let Some(closest_enemy) =
-                    find_closest(position, player_query.iter().cloned().chain(enemy_minions))
-                {
-                    closest_enemy
-                } else if let Some(closest_spawner) = find_closest(position, spawners_to_capture) {
-                    closest_spawner
-                } else {
-                    player_query.single().translation
-                }
+        let target_position = {
+            let enemy_players: Vec<GlobalTransform> = match minion_type {
+                ChickenOrDog::Chicken => enemy_query.iter().cloned().collect(),
+                ChickenOrDog::Dog => player_query.iter().cloned().collect(),
+            };
+
+            if let Some(closest_target) = find_closest(
+                position,
+                enemy_players
+                    .into_iter()
+                    .chain(enemy_minions)
+                    .chain(spawners_to_capture),
+            ) {
+                closest_target
+            } else {
+                player_query.single().translation
             }
         };
 
