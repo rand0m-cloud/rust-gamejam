@@ -37,8 +37,9 @@ name = "game"
 path = "src/main.rs"
 
 [features]
-default = ["fast-compile"]
+default = ["fast-compile", "fs-watch"]
 fast-compile = ["bevy/dynamic"]
+fs-watch = ["bevy/filesystem_watcher"]
 
 [profile.dev]
 opt-level = 1
