@@ -137,9 +137,11 @@ pub fn minions_ai(
         ),
         (With<Minion>, Without<Spawner>),
     >,
+    targets_query: Query<
+        (&GlobalTransform, Option<&ChickenOrDog>),
+        Or<(With<Spawner>, With<Player>, With<Enemy>)>,
+    >,
     player_query: Query<&GlobalTransform, With<Player>>,
-    enemy_query: Query<&GlobalTransform, With<Enemy>>,
-    spawner_query: Query<(&GlobalTransform, Option<&ChickenOrDog>), With<Spawner>>,
 
     time: Res<Time>,
 ) {
@@ -153,48 +155,19 @@ pub fn minions_ai(
         .map(|transform| transform.translation)
     }
 
-    let all_minions = minion_query
-        .iter()
-        .map(|(minion_type, transform, _, _)| (*minion_type, *transform))
-        .collect::<Vec<_>>();
-
     for (minion_type, global_transform, mut transform, movement_stats) in minion_query.iter_mut() {
         let position = global_transform.translation;
 
-        let spawners_to_capture =
-            spawner_query
-                .iter()
-                .filter_map(
-                    |(transform, spawner_minion_type)| match spawner_minion_type {
-                        None => Some(*transform),
-                        Some(ty) if ty != minion_type => Some(*transform),
-                        _ => None,
-                    },
-                );
-
-        let enemy_minions = all_minions
+        let enemy_targets = targets_query
             .iter()
-            .filter_map(|(other_minion_type, transform)| {
-                if minion_type != other_minion_type {
-                    Some(*transform)
-                } else {
-                    None
-                }
+            .filter_map(|(transform, target_minion_type)| match target_minion_type {
+                None => Some(*transform),
+                Some(ty) if ty != minion_type => Some(*transform),
+                _ => None,
             });
 
         let target_position = {
-            let enemy_players: Vec<GlobalTransform> = match minion_type {
-                ChickenOrDog::Chicken => enemy_query.iter().cloned().collect(),
-                ChickenOrDog::Dog => player_query.iter().cloned().collect(),
-            };
-
-            if let Some(closest_target) = find_closest(
-                position,
-                enemy_players
-                    .into_iter()
-                    .chain(enemy_minions)
-                    .chain(spawners_to_capture),
-            ) {
+            if let Some(closest_target) = find_closest(position, enemy_targets) {
                 closest_target
             } else {
                 player_query.single().translation
