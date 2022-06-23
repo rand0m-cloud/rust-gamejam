@@ -75,6 +75,7 @@ impl MinionBundle {
                 rotation_constraints: RotationConstraints::lock(),
                 collision_layer: CollisionLayers::all_masks::<Layer>().with_group(Layer::Enemy),
             })
+            .insert(Name::new("Puppy"))
             .id();
         Ok(ent)
     }
@@ -117,6 +118,7 @@ impl MinionBundle {
                 rotation_constraints: RotationConstraints::lock(),
                 collision_layer: CollisionLayers::all_masks::<Layer>().with_group(Layer::Enemy),
             })
+            .insert(Name::new("Chick"))
             .id();
         Ok(ent)
     }

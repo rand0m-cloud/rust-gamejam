@@ -45,12 +45,13 @@ pub fn spawn_enemy(
         })
         .insert(Enemy)
         .insert(Health(10.0))
-        .insert(MovementStats { speed: 0.1 })
+        .insert(MovementStats { speed: 0.2 })
         .insert(RigidBody::Dynamic)
         .insert(CollisionShape::Sphere { radius: size / 2.0 })
         .insert(RotationConstraints::lock())
         .insert(ChickenOrDog::Dog)
-        .insert(CollisionLayers::all_masks::<Layer>().with_group(Layer::Enemy));
+        .insert(CollisionLayers::all_masks::<Layer>().with_group(Layer::Enemy))
+        .insert(Name::new("Enemy"));
 }
 
 pub fn enemy_ai(
