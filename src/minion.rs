@@ -134,25 +134,49 @@ pub fn minions_ai(
     >,
     player_query: Query<&GlobalTransform, With<Player>>,
     enemy_query: Query<&GlobalTransform, With<Enemy>>,
+    spawner_query: Query<(&GlobalTransform, Option<&ChickenOrDog>), With<Spawner>>,
 
     time: Res<Time>,
 ) {
+    fn find_closest<'a>(
+        position: Vec3,
+        iter: impl Iterator<Item = &'a GlobalTransform>,
+    ) -> Option<Vec3> {
+        iter.min_by(|transform, other_transform| {
+            (position - transform.translation)
+                .length()
+                .partial_cmp(&(position - other_transform.translation).length())
+                .unwrap()
+        })
+        .map(|transform| transform.translation)
+    }
+
     for (minion_type, global_transform, mut transform, movement_stats) in minion_query.iter_mut() {
         let position = global_transform.translation;
+        let spawners_to_capture =
+            spawner_query
+                .iter()
+                .filter_map(
+                    |(transform, spawner_minion_type)| match spawner_minion_type {
+                        None => Some(transform),
+                        Some(ty) if ty != minion_type => Some(transform),
+                        _ => None,
+                    },
+                );
         let target_position = if *minion_type == ChickenOrDog::Chicken {
-            if let Some(closest_enemy) = enemy_query.iter().min_by(|transform, other_transform| {
-                (position - transform.translation)
-                    .length()
-                    .partial_cmp(&(position - other_transform.translation).length())
-                    .unwrap()
-            }) {
-                closest_enemy.translation
+            if let Some(closest_enemy) = find_closest(position, enemy_query.iter()) {
+                closest_enemy
+            } else if let Some(closest_spawner) = find_closest(position, spawners_to_capture) {
+                closest_spawner
             } else {
-                //XXX gross
                 player_query.single().translation
             }
         } else {
-            player_query.single().translation
+            if let Some(closest_spawner) = find_closest(position, spawners_to_capture) {
+                closest_spawner
+            } else {
+                player_query.single().translation
+            }
         };
 
         let dir = target_position - position;
