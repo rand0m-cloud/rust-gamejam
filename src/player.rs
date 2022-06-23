@@ -91,8 +91,8 @@ fn player_shoot(
             .insert(Bullet {
                 speed: 0.2,
                 direction: target_dir,
-                origin_team: ChickenOrDog::Chicken,
             })
+            .insert(ChickenOrDog::Chicken)
             .insert(RigidBody::Sensor)
             .insert(CollisionShape::Sphere { radius: size / 2.0 })
             .insert(RotationConstraints::lock())

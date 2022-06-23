@@ -11,18 +11,18 @@ impl Plugin for BulletPlugin {
 
 pub fn bullet_damage(
     mut entities: Query<(&mut Health, &ChickenOrDog)>,
-    bullets: Query<(&Collisions, &Bullet)>,
+    bullets: Query<(&Collisions, &ChickenOrDog), With<Bullet>>,
 ) {
     bullets
         .iter()
-        .flat_map(|(collisions, bullet)| {
+        .flat_map(|(collisions, origin_team)| {
             collisions
                 .entities()
-                .map(move |collision| (collision, bullet))
+                .map(move |collision| (collision, origin_team))
         })
-        .for_each(|(entity, bullet)| {
+        .for_each(|(entity, origin_team)| {
             if let Ok((mut health, entity_team)) = entities.get_mut(entity) {
-                if bullet.origin_team != *entity_team {
+                if origin_team != entity_team {
                     health.0 -= 1.0;
                 }
             }

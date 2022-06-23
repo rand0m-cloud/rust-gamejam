@@ -49,7 +49,6 @@ pub struct MovementStats {
 pub struct Bullet {
     pub speed: f32,
     pub direction: Vec2,
-    pub origin_team: ChickenOrDog,
 }
 
 #[derive(Component)]
