@@ -13,29 +13,20 @@ pub fn bullet_damage(
     mut entities: Query<(&mut Health, &ChickenOrDog)>,
     bullets: Query<(&Collisions, &Bullet)>,
 ) {
-    // have to collect the iter to drop the entities query
-    #[allow(clippy::needless_collect)]
-    let entities_to_damage = bullets
+    bullets
         .iter()
         .flat_map(|(collisions, bullet)| {
             collisions
                 .entities()
                 .map(move |collision| (collision, bullet))
         })
-        .filter_map(|(entity, bullet)| {
-            let (_, entity_team) = entities.get(entity).ok()?;
-            if bullet.origin_team != *entity_team {
-                Some(entity)
-            } else {
-                None
+        .for_each(|(entity, bullet)| {
+            if let Ok((mut health, entity_team)) = entities.get_mut(entity) {
+                if bullet.origin_team != *entity_team {
+                    health.0 -= 1.0;
+                }
             }
-        })
-        .collect::<Vec<_>>();
-
-    for entity in entities_to_damage {
-        let (mut health, _) = entities.get_mut(entity).unwrap();
-        health.0 -= 1.0;
-    }
+        });
 }
 
 fn delete_bullet(mut commands: Commands, bullets: Query<(&Collisions, Entity), With<Bullet>>) {
