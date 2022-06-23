@@ -107,7 +107,7 @@ fn spawn_minion_spawners(
                     transform: Transform::from_translation(Vec3::new(
                         spawn_location.x,
                         spawn_location.y,
-                        1.0,
+                        200.0,
                     )),
                     ..default()
                 })

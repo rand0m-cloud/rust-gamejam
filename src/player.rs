@@ -76,7 +76,7 @@ fn player_shoot(
         target_dir = target_dir.normalize();
 
         let mut transform = *transform;
-        transform.translation.z += 1.0;
+        transform.translation.z += 100.0;
 
         let size = 0.1;
 
@@ -169,7 +169,7 @@ fn spawn_player(
         .spawn_bundle(SpriteSheetBundle {
             sprite: chicken_walk.frames[0].clone(),
             texture_atlas: chicken_walk.texture.clone(),
-            transform: Transform::from_translation(map.player_spawn.extend(0.0)),
+            transform: Transform::from_translation(map.player_spawn.extend(800.0)),
             ..default()
         })
         .insert(Player {

@@ -58,6 +58,9 @@ pub struct OurAssets {
     #[asset(path = "awesome.png")]
     pub chicken_spawner: Handle<Image>,
 
+    #[asset(path = "background.png")]
+    pub background: Handle<Image>,
+
     #[asset(path = "main.map")]
     pub map: Handle<Map>,
 }
