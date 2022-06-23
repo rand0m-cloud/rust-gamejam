@@ -1,5 +1,3 @@
-use std::fs;
-
 use bevy_asset_loader::AssetCollection;
 use serde::Deserialize;
 
