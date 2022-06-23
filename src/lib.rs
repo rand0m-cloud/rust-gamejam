@@ -2,6 +2,7 @@
 
 pub mod assets;
 pub mod bullet;
+pub mod debug;
 pub mod enemy;
 pub mod external;
 pub mod map;
