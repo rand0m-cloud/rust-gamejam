@@ -39,7 +39,7 @@ name = "game"
 path = "src/main.rs"
 
 [features]
-default = ["fast-compile"]
+default = []
 fast-compile = ["bevy/dynamic"]
 
 [profile.dev]
