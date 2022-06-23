@@ -11,6 +11,7 @@ bevy = { version = "0.7", features = [
     "bevy_gilrs",
     "bevy_winit",
     "render",
+    "dynamic",
     "png",
     "hdr",
     "vorbis",

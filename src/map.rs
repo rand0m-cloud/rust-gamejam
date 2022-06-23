@@ -20,6 +20,7 @@ pub struct Map {
     pub rects: Vec<Rect>,
     pub spawn_locations: Vec<(Vec2, ChickenOrDog)>,
     pub player_spawn: Vec2,
+    pub enemy_spawn: Vec2,
 }
 
 pub struct MapPlugin;
@@ -28,7 +29,7 @@ impl Plugin for MapPlugin {
     fn build(&self, app: &mut App) {
         app.add_asset::<Map>()
             .init_asset_loader::<MapLoader>()
-            .add_system_set(SystemSet::on_enter(GameState::GamePlay).with_system(create_map));
+            .add_system_set(SystemSet::on_exit(GameState::Splash).with_system(create_map));
     }
 }
 

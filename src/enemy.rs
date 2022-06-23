@@ -3,7 +3,7 @@ use crate::prelude::*;
 pub struct EnemyPlugin;
 impl Plugin for EnemyPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system_set(SystemSet::on_enter(GameState::GamePlay).with_system(spawn_enemies))
+        app.add_system_set(SystemSet::on_enter(GameState::GamePlay).with_system(spawn_enemy))
             .add_system_set(SystemSet::on_update(GameState::GamePlay).with_system(enemy_ai))
             .add_system(enemy_death);
     }
@@ -19,38 +19,38 @@ pub fn enemy_death(enemies: Query<(Entity, &Health)>, mut commands: Commands) {
     }
 }
 
-pub fn spawn_enemies(mut commands: Commands, assets: Res<OurAssets>) {
-    let spawn_locations = [(-0.5, 0.5), (0.5, 0.5), (0.0, 1.0)]
-        .into_iter()
-        .map(Vec2::from);
-
+pub fn spawn_enemy(
+    mut commands: Commands,
+    assets: Res<OurAssets>,
+    map: Res<Assets<Map>>,
+    our_assets: Res<OurAssets>,
+) {
+    let map = map.get(our_assets.map.clone()).unwrap();
     let size = 0.25;
 
-    for spawn_location in spawn_locations {
-        commands
-            .spawn_bundle(SpriteBundle {
-                texture: assets.placeholder.clone(),
-                sprite: Sprite {
-                    color: Color::BLUE,
-                    custom_size: Some(Vec2::splat(size)),
-                    ..default()
-                },
-                transform: Transform::from_translation(Vec3::new(
-                    spawn_location.x,
-                    spawn_location.y,
-                    1.0,
-                )),
+    commands
+        .spawn_bundle(SpriteBundle {
+            texture: assets.placeholder.clone(),
+            sprite: Sprite {
+                color: Color::BLUE,
+                custom_size: Some(Vec2::splat(size)),
                 ..default()
-            })
-            .insert(Enemy)
-            .insert(Health(3.0))
-            .insert(MovementStats { speed: 0.1 })
-            .insert(RigidBody::Dynamic)
-            .insert(CollisionShape::Sphere { radius: size / 2.0 })
-            .insert(RotationConstraints::lock())
-            .insert(ChickenOrDog::Dog)
-            .insert(CollisionLayers::all_masks::<Layer>().with_group(Layer::Enemy));
-    }
+            },
+            transform: Transform::from_translation(Vec3::new(
+                map.enemy_spawn.x,
+                map.enemy_spawn.y,
+                1.0,
+            )),
+            ..default()
+        })
+        .insert(Enemy)
+        .insert(Health(10.0))
+        .insert(MovementStats { speed: 0.1 })
+        .insert(RigidBody::Dynamic)
+        .insert(CollisionShape::Sphere { radius: size / 2.0 })
+        .insert(RotationConstraints::lock())
+        .insert(ChickenOrDog::Dog)
+        .insert(CollisionLayers::all_masks::<Layer>().with_group(Layer::Enemy));
 }
 
 pub fn enemy_ai(
