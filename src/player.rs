@@ -4,6 +4,9 @@ use crate::{assets::ChickenWalkFrames, prelude::*};
 
 pub struct PlayerPlugin;
 
+#[derive(Component)]
+struct BulletParentTag;
+
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_system_set(SystemSet::on_enter(GameState::GamePlay).with_system(spawn_player))
@@ -29,6 +32,7 @@ fn camera_follow(
 fn player_shoot(
     mut commands: Commands,
     mut player: Query<(&Transform, &mut Player)>,
+    parent: Query<Entity, With<BulletParentTag>>,
 
     keyboard: Res<Input<KeyCode>>,
     axis: Res<Axis<GamepadAxis>>,
@@ -36,6 +40,7 @@ fn player_shoot(
 
     assets: Res<OurAssets>,
 ) {
+    let parent = parent.single();
     let (transform, mut player) = player.single_mut();
 
     if !player.bullet_cooldown.finished() {
@@ -77,7 +82,7 @@ fn player_shoot(
 
         player.bullet_cooldown.tick(time.delta());
 
-        commands
+        let bullet = commands
             .spawn_bundle(SpriteBundle {
                 sprite: Sprite {
                     color: Color::DARK_GREEN,
@@ -102,7 +107,10 @@ fn player_shoot(
                     .without_mask(Layer::Bullet)
                     .without_mask(Layer::Player),
             )
-            .insert(Collisions::default());
+            .insert(Collisions::default())
+            .insert(Name::new("Player Bullet"))
+            .id();
+        commands.entity(parent).add_child(bullet);
     }
 }
 
@@ -184,4 +192,9 @@ fn spawn_player(
             timer: Timer::from_seconds(1.0 / 10.0, true),
         })
         .insert(Name::new("Player"));
+
+    commands
+        .spawn_bundle(TransformBundle::default())
+        .insert(BulletParentTag)
+        .insert(Name::new("Bullets"));
 }

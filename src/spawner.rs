@@ -5,6 +5,9 @@ use crate::{
     world_ui::{spawn_quad, BarMaterial, Percentage},
 };
 
+#[derive(Component)]
+struct MinionParentTag;
+
 pub struct SpawnerPlugin;
 impl Plugin for SpawnerPlugin {
     fn build(&self, app: &mut App) {
@@ -44,23 +47,37 @@ pub fn spawn_initial_spawners(
         .map(|(location, _)| location)
         .collect();
 
-    spawn_minion_spawners(
+    let mut spawners = Vec::new();
+
+    spawners.extend(spawn_minion_spawners(
         &mut commands,
         &our_assets,
         ChickenOrDog::Chicken,
         chicken_spawner_locations,
         &mut mesh_assets,
         &mut my_material_assets,
-    );
-    spawn_minion_spawners(
+    ));
+
+    spawners.extend(spawn_minion_spawners(
         &mut commands,
         &our_assets,
         ChickenOrDog::Dog,
         dog_spawner_locations,
         &mut mesh_assets,
         &mut my_material_assets,
-    );
+    ));
+
+    commands
+        .spawn_bundle(TransformBundle::default())
+        .insert(Name::new("Spawners"))
+        .push_children(&spawners);
+
+    commands
+        .spawn_bundle(TransformBundle::default())
+        .insert(Name::new("Minions"))
+        .insert(MinionParentTag);
 }
+
 fn spawn_minion_spawners(
     commands: &mut Commands,
     assets: &Res<OurAssets>,
@@ -68,51 +85,61 @@ fn spawn_minion_spawners(
     spawn_locations: Vec<Vec2>,
     mesh_assets: &mut ResMut<Assets<Mesh>>,
     my_material_assets: &mut ResMut<Assets<BarMaterial>>,
-) {
+) -> Vec<Entity> {
     let (color, texture) = match minion_type {
         ChickenOrDog::Chicken => (Color::GREEN, assets.chicken_spawner.clone()),
         ChickenOrDog::Dog => (Color::SALMON, assets.dog_spawner.clone()),
     };
 
+    let mut spawned = Vec::new();
+
     for spawn_location in spawn_locations {
         let ui = spawn_quad(commands, mesh_assets, my_material_assets);
-        commands
-            .spawn_bundle(SpriteBundle {
-                texture: texture.clone(),
-                sprite: Sprite {
-                    color,
-                    custom_size: Some(Vec2::splat(0.25)),
+        spawned.push(
+            commands
+                .spawn_bundle(SpriteBundle {
+                    texture: texture.clone(),
+                    sprite: Sprite {
+                        color,
+                        custom_size: Some(Vec2::splat(0.25)),
+                        ..default()
+                    },
+                    transform: Transform::from_translation(Vec3::new(
+                        spawn_location.x,
+                        spawn_location.y,
+                        1.0,
+                    )),
                     ..default()
-                },
-                transform: Transform::from_translation(Vec3::new(
-                    spawn_location.x,
-                    spawn_location.y,
-                    1.0,
-                )),
-                ..default()
-            })
-            .insert(Minion)
-            .insert(Spawner::default())
-            .insert(RigidBody::Sensor)
-            .insert(CollisionShape::Sphere { radius: 0.2 })
-            .insert(
-                CollisionLayers::none()
-                    .with_group(Layer::CaptureArea)
-                    .with_masks(&[Layer::Player, Layer::Enemy]),
-            )
-            .insert(crate::external::collisions::Collisions::default())
-            .insert(Name::new("Spawner"))
-            .add_child(ui);
+                })
+                .insert(Minion)
+                .insert(Spawner::default())
+                .insert(RigidBody::Sensor)
+                .insert(CollisionShape::Sphere { radius: 0.2 })
+                .insert(
+                    CollisionLayers::none()
+                        .with_group(Layer::CaptureArea)
+                        .with_masks(&[Layer::Player, Layer::Enemy]),
+                )
+                .insert(crate::external::collisions::Collisions::default())
+                .insert(Name::new("Spawner"))
+                .add_child(ui)
+                .id(),
+        );
     }
+    spawned
 }
 
-pub fn minions_spawner_ai(
+fn minions_spawner_ai(
     mut commands: Commands,
     assets: Res<OurAssets>,
     mut spawners_query: Query<(&mut Spawner, &GlobalTransform, &ChickenOrDog), With<Minion>>,
     chick_walk: Res<ChickWalkFrames>,
+    parent: Query<Entity, With<MinionParentTag>>,
     time: Res<Time>,
 ) {
+    let parent = parent.single();
+
+    let mut spawned = Vec::new();
     for (mut spawner, transform, chicken_or_dog) in spawners_query.iter_mut() {
         spawner.spawn_timer.tick(time.delta());
         if spawner.spawn_timer.just_finished() {
@@ -135,18 +162,21 @@ pub fn minions_spawner_ai(
                             flip_x: false,
                             timer: Timer::from_seconds(1.0 / 10.0, true),
                         });
+                    spawned.push(ent);
                 }
                 ChickenOrDog::Dog => {
-                    let _ent = MinionBundle::spawn_dog_minion(
+                    let ent = MinionBundle::spawn_dog_minion(
                         &mut commands,
                         &assets,
                         transform.translation.truncate(),
                     )
                     .unwrap();
+                    spawned.push(ent);
                 }
             }
         }
     }
+    commands.entity(parent).push_children(&spawned);
 }
 
 fn spawner_capture_ai(
