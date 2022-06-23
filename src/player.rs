@@ -92,6 +92,7 @@ fn player_shoot(
                 speed: 0.2,
                 direction: target_dir,
             })
+            .insert(ChickenOrDog::Chicken)
             .insert(RigidBody::Sensor)
             .insert(CollisionShape::Sphere { radius: size / 2.0 })
             .insert(RotationConstraints::lock())
@@ -100,7 +101,8 @@ fn player_shoot(
                     .with_group(Layer::Bullet)
                     .without_mask(Layer::Bullet)
                     .without_mask(Layer::Player),
-            );
+            )
+            .insert(Collisions::default());
     }
 }
 

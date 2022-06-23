@@ -109,7 +109,7 @@ impl MinionBundle {
                 movement_stats: MovementStats {
                     speed: config.speed,
                 },
-                minion_type: ChickenOrDog::Dog,
+                minion_type: ChickenOrDog::Chicken,
                 minion: Minion,
                 hp: Health(config.hp),
                 rigid_body: RigidBody::Dynamic,

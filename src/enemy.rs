@@ -48,6 +48,7 @@ pub fn spawn_enemies(mut commands: Commands, assets: Res<OurAssets>) {
             .insert(RigidBody::Dynamic)
             .insert(CollisionShape::Sphere { radius: size / 2.0 })
             .insert(RotationConstraints::lock())
+            .insert(ChickenOrDog::Dog)
             .insert(CollisionLayers::all_masks::<Layer>().with_group(Layer::Enemy));
     }
 }
