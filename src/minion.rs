@@ -122,6 +122,9 @@ impl MinionBundle {
     }
 }
 
+/// # Minion AI
+/// - Minions look for the closest enemy, enemy minion, or capturable spawner
+/// - If there is no other targets, they follow the player
 pub fn minions_ai(
     mut minion_query: Query<
         (
@@ -134,25 +137,66 @@ pub fn minions_ai(
     >,
     player_query: Query<&GlobalTransform, With<Player>>,
     enemy_query: Query<&GlobalTransform, With<Enemy>>,
+    spawner_query: Query<(&GlobalTransform, Option<&ChickenOrDog>), With<Spawner>>,
 
     time: Res<Time>,
 ) {
+    fn find_closest(position: Vec3, iter: impl Iterator<Item = GlobalTransform>) -> Option<Vec3> {
+        iter.min_by(|transform, other_transform| {
+            (position - transform.translation)
+                .length()
+                .partial_cmp(&(position - other_transform.translation).length())
+                .unwrap()
+        })
+        .map(|transform| transform.translation)
+    }
+
+    let all_minions = minion_query
+        .iter()
+        .map(|(minion_type, transform, _, _)| (*minion_type, *transform))
+        .collect::<Vec<_>>();
+
     for (minion_type, global_transform, mut transform, movement_stats) in minion_query.iter_mut() {
         let position = global_transform.translation;
-        let target_position = if *minion_type == ChickenOrDog::Chicken {
-            if let Some(closest_enemy) = enemy_query.iter().min_by(|transform, other_transform| {
-                (position - transform.translation)
-                    .length()
-                    .partial_cmp(&(position - other_transform.translation).length())
-                    .unwrap()
-            }) {
-                closest_enemy.translation
+
+        let spawners_to_capture =
+            spawner_query
+                .iter()
+                .filter_map(
+                    |(transform, spawner_minion_type)| match spawner_minion_type {
+                        None => Some(*transform),
+                        Some(ty) if ty != minion_type => Some(*transform),
+                        _ => None,
+                    },
+                );
+
+        let enemy_minions = all_minions
+            .iter()
+            .filter_map(|(other_minion_type, transform)| {
+                if minion_type != other_minion_type {
+                    Some(*transform)
+                } else {
+                    None
+                }
+            });
+
+        let target_position = {
+            let enemy_players: Vec<GlobalTransform> = match minion_type {
+                ChickenOrDog::Chicken => enemy_query.iter().cloned().collect(),
+                ChickenOrDog::Dog => player_query.iter().cloned().collect(),
+            };
+
+            if let Some(closest_target) = find_closest(
+                position,
+                enemy_players
+                    .into_iter()
+                    .chain(enemy_minions)
+                    .chain(spawners_to_capture),
+            ) {
+                closest_target
             } else {
-                //XXX gross
                 player_query.single().translation
             }
-        } else {
-            player_query.single().translation
         };
 
         let dir = target_position - position;

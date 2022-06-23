@@ -155,6 +155,7 @@ fn spawner_capture_ai(
     mut ui_query: Query<&mut Percentage>,
     player: Query<&Player, Without<Minion>>,
     enemy: Query<&Enemy, Without<Minion>>,
+    minions: Query<&ChickenOrDog, (With<Minion>, Without<Spawner>)>,
     time: Res<Time>,
 ) {
     for (collisions, mut spawner, spawner_ent, spawner_children) in spawners.iter_mut() {
@@ -162,13 +163,28 @@ fn spawner_capture_ai(
             continue;
         }
 
-        let progress_multiplier = if collisions.entities().any(|ent| player.get(ent).is_ok()) {
-            1.0
-        } else if collisions.entities().any(|ent| enemy.get(ent).is_ok()) {
-            -1.0
-        } else {
-            0.0
-        };
+        let mut progress_multiplier = 0.0;
+
+        if collisions.entities().any(|ent| player.get(ent).is_ok()) {
+            progress_multiplier += 1.0;
+        }
+
+        progress_multiplier -= collisions
+            .entities()
+            .filter(|ent| enemy.get(*ent).is_ok())
+            .count() as f32;
+
+        let minion_advantage: f32 = collisions
+            .entities()
+            .filter_map(|ent| {
+                let minion_type = minions.get(ent).ok()?;
+                Some(match minion_type {
+                    ChickenOrDog::Chicken => 0.2,
+                    ChickenOrDog::Dog => -0.2,
+                })
+            })
+            .sum();
+        progress_multiplier += minion_advantage;
 
         let delta_progress = progress_multiplier * (time.delta_seconds() / spawner.capture_time);
 
