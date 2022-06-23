@@ -1,9 +1,15 @@
 name: Build WASM and deploy to Itch.io
 
-on: push
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
 env:
   ITCH_USERNAME: logicprojects
   ITCH_GAME_ID: placeholder-game-title
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
