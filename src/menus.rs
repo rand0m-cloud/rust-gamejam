@@ -136,9 +136,9 @@ pub struct SliderBoxProps {
 fn SliderBox(props: SliderBoxProps) {
     //Set up slider internal state
     let (is_dragging, set_is_dragging, ..) = use_state!(false);
-    let (offset, set_offset, ..) = use_state!(0.0);
-    let (pos, set_pos, ..) = use_state!(0.0);
-    let (percent, set_percent, ..) = use_state!(0.0);
+    let (offset, set_offset, ..) = use_state!(props.size.0 / 2.3);
+    let (pos, set_pos, ..) = use_state!(props.size.0 / 2.3);
+    let (percent, set_percent, ..) = use_state!(50.0);
     let (layout, set_layout, ..) = use_state!(10000.0);
 
     //Handle dragging

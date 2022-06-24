@@ -10,6 +10,7 @@ pub mod gameover;
 pub mod map;
 pub mod menus;
 pub mod minion;
+pub mod particles;
 pub mod player;
 pub mod prelude;
 pub mod spawner;
