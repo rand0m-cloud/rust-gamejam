@@ -13,9 +13,12 @@ pub struct Player {
 }
 
 #[derive(Component)]
-pub struct Enemy;
+pub struct Enemy {
+    pub bullet_cooldown: Timer,
+}
 
-#[derive(Component, Debug)]
+#[derive(Component, Debug, Reflect, Default)]
+#[reflect(Component)]
 pub struct Health(pub f32);
 
 #[derive(PhysicsLayer, Copy, Clone)]

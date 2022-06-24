@@ -112,7 +112,7 @@ impl MinionBundle {
                 rigid_body: RigidBody::Dynamic,
                 collision_shape: CollisionShape::Sphere { radius: size / 2.0 },
                 rotation_constraints: RotationConstraints::lock(),
-                collision_layer: CollisionLayers::all_masks::<Layer>().with_group(Layer::Enemy),
+                collision_layer: CollisionLayers::all_masks::<Layer>().with_group(Layer::Player),
             })
             .insert(Name::new("Chick"))
             .id();

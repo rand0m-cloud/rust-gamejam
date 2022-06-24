@@ -179,11 +179,7 @@ fn spawn_player(
         .insert(RigidBody::Dynamic)
         .insert(CollisionShape::Sphere { radius: size / 2.0 })
         .insert(RotationConstraints::lock())
-        .insert(
-            CollisionLayers::all_masks::<Layer>()
-                .with_group(Layer::Player)
-                .without_mask(Layer::Bullet),
-        )
+        .insert(CollisionLayers::all_masks::<Layer>().with_group(Layer::Player))
         .insert(Animation {
             current_frame: 0,
             frames: chicken_walk.frames.iter().map(|f| f.index).collect(),
@@ -192,7 +188,8 @@ fn spawn_player(
             timer: Timer::from_seconds(1.0 / 10.0, true),
         })
         .insert(Name::new("Player"))
-        .insert(ChickenOrDog::Chicken);
+        .insert(ChickenOrDog::Chicken)
+        .insert(Health(10.0));
 
     commands
         .spawn_bundle(TransformBundle::default())
