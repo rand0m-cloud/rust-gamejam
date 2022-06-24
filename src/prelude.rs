@@ -7,6 +7,8 @@ use serde::{Deserialize, Serialize};
 
 pub use crate::{assets::OurAssets, map::Map, GameState};
 
+pub const PLAYER_HP: f32 = 10.0;
+
 #[derive(Component)]
 pub struct Player {
     pub bullet_cooldown: Timer,

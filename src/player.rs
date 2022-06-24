@@ -190,7 +190,7 @@ fn spawn_player(
         })
         .insert(Name::new("Player"))
         .insert(ChickenOrDog::Chicken)
-        .insert(Health(10.0));
+        .insert(Health(PLAYER_HP));
 
     commands
         .spawn_bundle(TransformBundle::default())
@@ -210,8 +210,7 @@ fn player_death(
 ) {
     for (mut transform, mut health, team) in players.iter_mut() {
         if health.0 <= 0.0 {
-            // hard-coded respawn health here
-            health.0 = 10.0;
+            health.0 = PLAYER_HP;
 
             let friendly_spawners = spawners
                 .iter()

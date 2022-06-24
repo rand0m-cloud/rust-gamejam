@@ -42,7 +42,7 @@ pub fn spawn_enemy(
         .insert(Enemy {
             bullet_cooldown: Timer::from_seconds(0.6, true),
         })
-        .insert(Health(10.0))
+        .insert(Health(PLAYER_HP))
         .insert(MovementStats { speed: 0.2 })
         .insert(RigidBody::Dynamic)
         .insert(CollisionShape::Sphere { radius: size / 2.0 })
