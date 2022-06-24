@@ -8,18 +8,17 @@ pub const CLEAR: Color = Color::rgb(0.3, 0.3, 0.3);
 pub const HEIGHT: f32 = 900.0;
 pub const RESOLUTION: f32 = 16.0 / 9.0;
 
-use ron::de;
 use rust_gamejam::{
     assets::GameAssetsPlugin, bullet::BulletPlugin, debug::DebugPlugin, enemy::EnemyPlugin,
-    external::ExternalPlugin, map::MapPlugin, minion::*, player::PlayerPlugin, prelude::*,
-    spawner::SpawnerPlugin, world_ui::BarMaterialPlugin,
+    external::ExternalPlugin, map::MapPlugin, menus::MenuPlugin, minion::*, player::PlayerPlugin,
+    prelude::*, spawner::SpawnerPlugin, world_ui::BarMaterialPlugin,
 };
 
 fn main() {
     let mut app = App::new();
 
     AssetLoader::new(GameState::Splash)
-        .continue_to_state(GameState::GamePlay)
+        .continue_to_state(GameState::MainMenu)
         .with_collection::<OurAssets>()
         .build(&mut app);
 
@@ -54,6 +53,7 @@ fn main() {
         .add_plugin(SpawnerPlugin)
         .add_plugin(BarMaterialPlugin)
         .add_plugin(DebugPlugin)
+        .add_plugin(MenuPlugin)
         .add_startup_system(spawn_camera)
         .add_system_set(SystemSet::on_enter(GameState::GamePlay).with_system(spawn_background))
         .add_system(toggle_inspector)

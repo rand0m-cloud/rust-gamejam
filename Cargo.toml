@@ -24,6 +24,9 @@ rand = "0.8.0"
 ron = "0.7.0"
 bevy_mod_picking = "0.7"
 serde = { version = "1", features = ["derive"] }
+kayak_ui = { git = "https://github.com/StarArawn/kayak_ui", features = [
+    "bevy_renderer",
+] }
 
 [lib]
 path = "src/lib.rs"
