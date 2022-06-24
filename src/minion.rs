@@ -41,11 +41,9 @@ impl MinionBundle {
         assets: &Res<OurAssets>,
         spawn_location: Vec2,
     ) -> anyhow::Result<Entity> {
-        let config: DogMinionConfig = ron::de::from_reader(
-            std::fs::File::open("assets/config/dog_minion.ron")
-                .context("failed to open assets/config/dog_minion.ron")?,
-        )
-        .context("failed to deserialize DogMinionConfig")?;
+        let config: DogMinionConfig =
+            ron::de::from_str(include_str!("../assets/config/dog_minion.ron"))
+                .context("failed to deserialize DogMinionConfig")?;
         let size = 0.25;
 
         let ent = commands
@@ -85,11 +83,9 @@ impl MinionBundle {
         assets: &Res<OurAssets>,
         spawn_location: Vec2,
     ) -> anyhow::Result<Entity> {
-        let config: ChickenMinionConfig = ron::de::from_reader(
-            std::fs::File::open("assets/config/chicken_minion.ron")
-                .context("failed to open assets/config/chicken_minion.ron")?,
-        )
-        .context("failed to deserialize ChickenMinionConfig")?;
+        let config: ChickenMinionConfig =
+            ron::de::from_str(include_str!("../assets/config/chicken_minion.ron"))
+                .context("failed to deserialize ChickenMinionConfig")?;
         let size = 0.25;
 
         let ent = commands
