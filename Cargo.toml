@@ -24,6 +24,7 @@ rand = "0.8.0"
 ron = "0.7.0"
 bevy_mod_picking = "0.7"
 serde = { version = "1", features = ["derive"] }
+bevy_tweening = "0.4"
 
 [lib]
 path = "src/lib.rs"

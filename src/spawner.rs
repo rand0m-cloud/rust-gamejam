@@ -241,7 +241,10 @@ fn spawner_capture_ai(
     }
 }
 
-fn spawner_win_con(spawners: Query<Option<&ChickenOrDog>, With<Spawner>>) {
+fn spawner_win_con(
+    spawners: Query<Option<&ChickenOrDog>, With<Spawner>>,
+    mut state: ResMut<State<GameState>>,
+) {
     let total_spawners = spawners.iter().count();
     let captured_spawners = spawners.iter().flatten().cloned();
 
@@ -249,8 +252,8 @@ fn spawner_win_con(spawners: Query<Option<&ChickenOrDog>, With<Spawner>>) {
         captured_spawners.partition::<Vec<_>, _>(|ty| *ty == ChickenOrDog::Chicken);
 
     if chicken_captured.len() == total_spawners {
-        todo!("player captured all spawners")
+        state.push(GameState::GameOver { won: true }).unwrap();
     } else if dog_captured.len() == total_spawners {
-        todo!("enemy captured all spawners")
+        state.push(GameState::GameOver { won: false }).unwrap();
     }
 }

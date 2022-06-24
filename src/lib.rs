@@ -5,6 +5,7 @@ pub mod bullet;
 pub mod debug;
 pub mod enemy;
 pub mod external;
+pub mod gameover;
 pub mod map;
 pub mod minion;
 pub mod player;
@@ -16,4 +17,5 @@ pub mod world_ui;
 pub enum GameState {
     Splash,
     GamePlay,
+    GameOver { won: bool },
 }

@@ -3,6 +3,7 @@
 use bevy::{asset::AssetServerSettings, render::camera::ScalingMode, window::PresentMode};
 use bevy_asset_loader::AssetLoader;
 use bevy_inspector_egui::{WorldInspectorParams, WorldInspectorPlugin};
+use bevy_tweening::TweeningPlugin;
 
 pub const CLEAR: Color = Color::rgb(0.3, 0.3, 0.3);
 pub const HEIGHT: f32 = 900.0;
@@ -10,8 +11,8 @@ pub const RESOLUTION: f32 = 16.0 / 9.0;
 
 use rust_gamejam::{
     assets::GameAssetsPlugin, bullet::BulletPlugin, debug::DebugPlugin, enemy::EnemyPlugin,
-    external::ExternalPlugin, map::MapPlugin, minion::*, player::PlayerPlugin, prelude::*,
-    spawner::SpawnerPlugin, world_ui::BarMaterialPlugin,
+    external::ExternalPlugin, gameover::GameOverPlugin, map::MapPlugin, minion::*,
+    player::PlayerPlugin, prelude::*, spawner::SpawnerPlugin, world_ui::BarMaterialPlugin,
 };
 
 fn main() {
@@ -53,6 +54,8 @@ fn main() {
         .add_plugin(SpawnerPlugin)
         .add_plugin(BarMaterialPlugin)
         .add_plugin(DebugPlugin)
+        .add_plugin(TweeningPlugin)
+        .add_plugin(GameOverPlugin)
         .add_startup_system(spawn_camera)
         .add_system(toggle_inspector)
         .register_type::<Animation>()
