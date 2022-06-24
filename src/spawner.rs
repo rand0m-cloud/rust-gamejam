@@ -243,7 +243,7 @@ fn spawner_capture_ai(
 
 fn spawner_win_con(spawners: Query<Option<&ChickenOrDog>, With<Spawner>>) {
     let total_spawners = spawners.iter().count();
-    let captured_spawners = spawners.iter().filter_map(|ty| ty).cloned();
+    let captured_spawners = spawners.iter().flatten().cloned();
 
     let (chicken_captured, dog_captured) =
         captured_spawners.partition::<Vec<_>, _>(|ty| *ty == ChickenOrDog::Chicken);
