@@ -141,16 +141,6 @@ pub fn minions_ai(
 
     time: Res<Time>,
 ) {
-    fn find_closest(position: Vec2, iter: impl Iterator<Item = GlobalTransform>) -> Option<Vec2> {
-        iter.min_by(|transform, other_transform| {
-            (position - transform.translation.truncate())
-                .length()
-                .partial_cmp(&(position - other_transform.translation.truncate()).length())
-                .unwrap()
-        })
-        .map(|transform| transform.translation.truncate())
-    }
-
     for (minion_type, global_transform, mut transform, movement_stats) in minion_query.iter_mut() {
         let position = global_transform.translation.truncate();
 

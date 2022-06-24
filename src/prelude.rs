@@ -116,3 +116,13 @@ pub fn is_layer_collision(event: &CollisionEvent, layer: Layer) -> Option<(Entit
         _ => None,
     }
 }
+
+pub fn find_closest(position: Vec2, iter: impl Iterator<Item = GlobalTransform>) -> Option<Vec2> {
+    iter.min_by(|transform, other_transform| {
+        (position - transform.translation.truncate())
+            .length()
+            .partial_cmp(&(position - other_transform.translation.truncate()).length())
+            .unwrap()
+    })
+    .map(|transform| transform.translation.truncate())
+}
