@@ -57,19 +57,38 @@ pub fn spawn_enemy(
         .insert(Name::new("Enemy Bullets"));
 }
 
-pub fn enemy_ai(
-    mut query: ParamSet<(
-        Query<&GlobalTransform, With<Player>>,
-        Query<(&GlobalTransform, &mut Transform, &MovementStats), With<Enemy>>,
-    )>,
+fn enemy_ai(
+    mut minion_query: Query<(&GlobalTransform, &mut Transform, &MovementStats), With<Enemy>>,
+    targets_query: Query<
+        (&GlobalTransform, Option<&ChickenOrDog>),
+        Or<(With<Spawner>, With<Player>, With<Enemy>)>,
+    >,
+    player_query: Query<&GlobalTransform, With<Player>>,
+
     time: Res<Time>,
 ) {
-    let player_translation = query.p0().single().translation;
-    for (enemy_global_transform, mut enemy_transform, movement_stats) in query.p1().iter_mut() {
-        let dir = player_translation.truncate() - enemy_global_transform.translation.truncate();
-        let dir = dir.try_normalize().unwrap_or_default().extend(0.0);
+    for (global_transform, mut transform, movement_stats) in minion_query.iter_mut() {
+        let position = global_transform.translation.truncate();
 
-        enemy_transform.translation += dir * movement_stats.speed * time.delta_seconds();
+        let enemy_targets = targets_query
+            .iter()
+            .filter_map(|(transform, target_minion_type)| match target_minion_type {
+                None => Some(*transform),
+                Some(ChickenOrDog::Chicken) => Some(*transform),
+                _ => None,
+            });
+
+        let target_position = {
+            if let Some(closest_target) = find_closest(position, enemy_targets) {
+                closest_target
+            } else {
+                player_query.single().translation.truncate()
+            }
+        };
+
+        let dir = target_position - position;
+        let dir = dir.try_normalize().unwrap_or_default().extend(0.0);
+        transform.translation += dir * movement_stats.speed * time.delta_seconds();
     }
 }
 
