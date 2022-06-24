@@ -28,7 +28,7 @@ fn main() {
             watch_for_changes: true,
             ..default()
         })
-        .insert_resource(ClearColor(CLEAR))
+        .insert_resource(ClearColor(Color::hex(&"24523b").unwrap()))
         .insert_resource(WindowDescriptor {
             width: HEIGHT * RESOLUTION,
             height: HEIGHT,
