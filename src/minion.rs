@@ -58,7 +58,7 @@ impl MinionBundle {
                     transform: Transform::from_translation(Vec3::new(
                         spawn_location.x,
                         spawn_location.y,
-                        1.0,
+                        100.0,
                     )),
                     ..default()
                 },
@@ -99,7 +99,7 @@ impl MinionBundle {
                     transform: Transform::from_translation(Vec3::new(
                         spawn_location.x,
                         spawn_location.y,
-                        1.0,
+                        100.0,
                     )),
                     ..default()
                 },

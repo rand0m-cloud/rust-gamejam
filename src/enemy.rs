@@ -46,7 +46,7 @@ pub fn spawn_enemy(
             transform: Transform::from_translation(Vec3::new(
                 map.enemy_spawn.x,
                 map.enemy_spawn.y,
-                1.0,
+                500.0,
             )),
             ..default()
         })

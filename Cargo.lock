@@ -140,6 +140,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8da52d66c7071e2e3fa2a1e5c6d088fec47b593032b254f5e980de8ea54454d6"
 
 [[package]]
+name = "as-any"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "088ccb346677e658e7ccd9627c62576fba881f4db7fab71fa9e21bf31c0aa4cb"
+
+[[package]]
 name = "ash"
 version = "0.34.0+1.2.203"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -178,6 +184,12 @@ name = "async-task"
 version = "4.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "30696a84d817107fc028e049980e09d5e140e8da8f1caeb17e8e950658a3cea9"
+
+[[package]]
+name = "atomic-arena"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5450eca8ce5abcfd5520727e975ebab30ccca96030550406b0ca718b224ead10"
 
 [[package]]
 name = "atomic_refcell"
@@ -562,6 +574,46 @@ dependencies = [
  "bevy_window",
  "bevy_winit",
  "ndk-glue 0.5.2",
+]
+
+[[package]]
+name = "bevy_kayak_renderer"
+version = "0.0.1"
+source = "git+https://github.com/StarArawn/kayak_ui#3f5546abff074c04490e79ac44100d9558bc2020"
+dependencies = [
+ "bevy",
+ "bytemuck",
+ "kayak_font",
+ "serde",
+ "serde_json",
+ "serde_path_to_error",
+]
+
+[[package]]
+name = "bevy_kayak_ui"
+version = "0.0.1"
+source = "git+https://github.com/StarArawn/kayak_ui#3f5546abff074c04490e79ac44100d9558bc2020"
+dependencies = [
+ "bevy",
+ "bevy_kayak_renderer",
+ "bytemuck",
+ "kayak_core",
+ "kayak_font",
+ "serde",
+ "serde_json",
+ "serde_path_to_error",
+]
+
+[[package]]
+name = "bevy_kira_audio"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c07e27a661ef2a0e92bcec42ebc4bd720871f093eb6f4e610297746095c5a45b"
+dependencies = [
+ "anyhow",
+ "bevy",
+ "kira",
+ "parking_lot 0.11.2",
 ]
 
 [[package]]
@@ -1421,6 +1473,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "desync"
+version = "0.7.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a287e1456d194ab84752303f5cbf8a7c2d1665bf676e48d6fe08e6b55ba2af0a"
+dependencies = [
+ "futures",
+ "lazy_static",
+ "num_cpus",
+]
+
+[[package]]
 name = "discard"
 version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1472,6 +1535,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c223f58c7e38abe1770f367b969f1b3fbd4704b67666bcb65dbb1adb0980ba72"
 dependencies = [
  "bytemuck",
+]
+
+[[package]]
+name = "encoding_rs"
+version = "0.8.31"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9852635589dc9f9ea1b6fe9f05b50ef208c85c834a562f0c6abb1c475736ec2b"
+dependencies = [
+ "cfg-if 1.0.0",
 ]
 
 [[package]]
@@ -1561,6 +1633,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "279fb028e20b3c4c320317955b77c5e0c9701f05a1d309905d6fc702cdc5053e"
 
 [[package]]
+name = "flo_rope"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "934e2de58fcae0ada41e86f12f49f169d2a0349ebd27fc4cfb3d3ba34db827be"
+
+[[package]]
 name = "float-ord"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1607,10 +1685,46 @@ dependencies = [
 ]
 
 [[package]]
+name = "futures"
+version = "0.3.21"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f73fe65f54d1e12b726f517d3e2135ca3125a437b6d998caf1962961f7172d9e"
+dependencies = [
+ "futures-channel",
+ "futures-core",
+ "futures-executor",
+ "futures-io",
+ "futures-sink",
+ "futures-task",
+ "futures-util",
+]
+
+[[package]]
+name = "futures-channel"
+version = "0.3.21"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c3083ce4b914124575708913bca19bfe887522d6e2e6d0952943f5eac4a74010"
+dependencies = [
+ "futures-core",
+ "futures-sink",
+]
+
+[[package]]
 name = "futures-core"
 version = "0.3.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0c09fd04b7e4073ac7156a9539b57a484a8ea920f79c7c675d05d289ab6110d3"
+
+[[package]]
+name = "futures-executor"
+version = "0.3.21"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9420b90cfa29e327d0429f19be13e7ddb68fa1cccb09d65e5706b8c7a749b8a6"
+dependencies = [
+ "futures-core",
+ "futures-task",
+ "futures-util",
+]
 
 [[package]]
 name = "futures-io"
@@ -1631,6 +1745,47 @@ dependencies = [
  "parking",
  "pin-project-lite",
  "waker-fn",
+]
+
+[[package]]
+name = "futures-macro"
+version = "0.3.21"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "33c1e13800337f4d4d7a316bf45a567dbcb6ffe087f16424852d97e97a91f512"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "futures-sink"
+version = "0.3.21"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "21163e139fa306126e6eedaf49ecdb4588f939600f0b1e770f4205ee4b7fa868"
+
+[[package]]
+name = "futures-task"
+version = "0.3.21"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "57c66a976bf5909d801bbef33416c41372779507e7a6b3a5e25e4749c58f776a"
+
+[[package]]
+name = "futures-util"
+version = "0.3.21"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d8b7abd5d659d9b90c8cba917f6ec750a74e2dc23902ef9cd4cc8c8b22e6036a"
+dependencies = [
+ "futures-channel",
+ "futures-core",
+ "futures-io",
+ "futures-macro",
+ "futures-sink",
+ "futures-task",
+ "memchr",
+ "pin-project-lite",
+ "pin-utils",
+ "slab",
 ]
 
 [[package]]
@@ -2080,6 +2235,63 @@ dependencies = [
 ]
 
 [[package]]
+name = "kayak_core"
+version = "0.1.0"
+source = "git+https://github.com/StarArawn/kayak_ui#3f5546abff074c04490e79ac44100d9558bc2020"
+dependencies = [
+ "as-any",
+ "bevy",
+ "desync",
+ "flo_rope",
+ "futures",
+ "indexmap",
+ "kayak_font",
+ "kayak_render_macros",
+ "morphorm",
+ "resources",
+ "uuid",
+]
+
+[[package]]
+name = "kayak_font"
+version = "0.1.0"
+source = "git+https://github.com/StarArawn/kayak_ui#3f5546abff074c04490e79ac44100d9558bc2020"
+dependencies = [
+ "anyhow",
+ "bevy",
+ "bytemuck",
+ "serde",
+ "serde_json",
+ "serde_path_to_error",
+ "unicode-segmentation",
+ "xi-unicode",
+]
+
+[[package]]
+name = "kayak_render_macros"
+version = "0.1.0"
+source = "git+https://github.com/StarArawn/kayak_ui#3f5546abff074c04490e79ac44100d9558bc2020"
+dependencies = [
+ "proc-macro-crate",
+ "proc-macro-error",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "kayak_ui"
+version = "0.1.0"
+source = "git+https://github.com/StarArawn/kayak_ui#3f5546abff074c04490e79ac44100d9558bc2020"
+dependencies = [
+ "bevy",
+ "bevy_kayak_ui",
+ "kayak_core",
+ "kayak_font",
+ "kayak_render_macros",
+]
+
+[[package]]
 name = "khronos-egl"
 version = "4.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2087,6 +2299,18 @@ checksum = "8c2352bd1d0bceb871cb9d40f24360c8133c11d7486b68b5381c1dd1a32015e3"
 dependencies = [
  "libc",
  "libloading",
+]
+
+[[package]]
+name = "kira"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "169054ea926c0b14f825d9ce51b8648452144bfd8f8f232b3400f18ca1c9b6e0"
+dependencies = [
+ "atomic-arena",
+ "cpal",
+ "ringbuf",
+ "symphonia",
 ]
 
 [[package]]
@@ -2326,6 +2550,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b9f1c5b025cda876f66ef43a113f91ebc9f4ccef34843000e0adf6ebbab84e21"
 dependencies = [
  "winapi",
+]
+
+[[package]]
+name = "morphorm"
+version = "0.2.0"
+source = "git+https://github.com/geom3trik/morphorm?rev=1243152d4cebea46fd3e5098df26402c73acae91#1243152d4cebea46fd3e5098df26402c73acae91"
+dependencies = [
+ "bitflags",
+ "smallvec",
 ]
 
 [[package]]
@@ -2833,6 +3066,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e0a7ae3ac2f1173085d398531c705756c94a4c56843785df85a60c1a0afac116"
 
 [[package]]
+name = "pin-utils"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8b870d8c151b6f2fb93e84a13146138f05d02ed11c7e7c54f8826aaaf7c9f184"
+
+[[package]]
 name = "pkg-config"
 version = "0.3.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3049,6 +3288,26 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f1382d1f0a252c4bf97dc20d979a2fdd05b024acd7c2ed0f7595d7817666a157"
 
 [[package]]
+name = "resources"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "42070ea13709eb92d2977b48c7d3bd44866fa328e14248f8d1f00d6ea14d5066"
+dependencies = [
+ "downcast-rs",
+ "fxhash",
+ "parking_lot 0.11.2",
+]
+
+[[package]]
+name = "ringbuf"
+version = "0.2.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f65af18d50f789e74aaf23bbb3f65dcd22a3cb6e029b5bced149f6bd57c5c2a2"
+dependencies = [
+ "cache-padded",
+]
+
+[[package]]
 name = "rodio"
 version = "0.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3077,9 +3336,11 @@ dependencies = [
  "bevy",
  "bevy-inspector-egui",
  "bevy_asset_loader",
+ "bevy_kira_audio",
  "bevy_mod_picking",
  "bevy_tweening",
  "heron",
+ "kayak_ui",
  "rand",
  "ron",
  "serde",
@@ -3190,6 +3451,15 @@ checksum = "9b7ce2b32a1aed03c558dc61a5cd328f15aff2dbc17daad8fb8af04d2100e15c"
 dependencies = [
  "itoa",
  "ryu",
+ "serde",
+]
+
+[[package]]
+name = "serde_path_to_error"
+version = "0.1.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d7868ad3b8196a8a0aea99a8220b124278ee5320a55e4fde97794b6f85b1a377"
+dependencies = [
  "serde",
 ]
 
@@ -3354,6 +3624,100 @@ name = "svg_fmt"
 version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8fb1df15f412ee2e9dfc1c504260fa695c1c3f10fe9f4a6ee2d2184d7d6450e2"
+
+[[package]]
+name = "symphonia"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "eb30457ee7a904dae1e4ace25156dcabaf71e425db318e7885267f09cd8fb648"
+dependencies = [
+ "lazy_static",
+ "symphonia-codec-pcm",
+ "symphonia-codec-vorbis",
+ "symphonia-core",
+ "symphonia-format-ogg",
+ "symphonia-format-wav",
+ "symphonia-metadata",
+]
+
+[[package]]
+name = "symphonia-codec-pcm"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0812a197602dff1f963ff212f174c4aa4d9b695d6511ba7a8fe2470296cf8310"
+dependencies = [
+ "log",
+ "symphonia-core",
+]
+
+[[package]]
+name = "symphonia-codec-vorbis"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "746fc459966b37e277565f9632e5ffd6cbd83d9381152727123f68484cb8f9c4"
+dependencies = [
+ "log",
+ "symphonia-core",
+ "symphonia-utils-xiph",
+]
+
+[[package]]
+name = "symphonia-core"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1edcb254d25e02b688b6f8a290a778153fa5f29674ac50773d03e0a16060391d"
+dependencies = [
+ "arrayvec",
+ "bitflags",
+ "bytemuck",
+ "lazy_static",
+ "log",
+]
+
+[[package]]
+name = "symphonia-format-ogg"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "00f5b92a2a6370873d9dbe3326dad1bf795b3151efcadca6e5f47d732499a518"
+dependencies = [
+ "log",
+ "symphonia-core",
+ "symphonia-metadata",
+ "symphonia-utils-xiph",
+]
+
+[[package]]
+name = "symphonia-format-wav"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "66b2016576a9f7e5e95f9354993116458170a9077845a908ee67a4c81e8072c0"
+dependencies = [
+ "log",
+ "symphonia-core",
+ "symphonia-metadata",
+]
+
+[[package]]
+name = "symphonia-metadata"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f04ee665c99fd2b919b87261c86a5312e996b720ca142646a163d9583e72bd0e"
+dependencies = [
+ "encoding_rs",
+ "lazy_static",
+ "log",
+ "symphonia-core",
+]
+
+[[package]]
+name = "symphonia-utils-xiph"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "abadfa53359fa437836f2554a0019dd06bfdf742fbb735d0645db3b6c5a763e0"
+dependencies = [
+ "symphonia-core",
+ "symphonia-metadata",
+]
 
 [[package]]
 name = "syn"
@@ -3545,6 +3909,12 @@ checksum = "d54590932941a9e9266f0832deed84ebe1bf2e4c9e4a3554d393d18f5e854bf9"
 dependencies = [
  "tinyvec",
 ]
+
+[[package]]
+name = "unicode-segmentation"
+version = "1.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7e8820f5d777f6224dc4be3632222971ac30164d4a258d595640799554ebfd99"
 
 [[package]]
 name = "unicode-width"
