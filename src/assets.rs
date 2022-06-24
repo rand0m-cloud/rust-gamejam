@@ -61,6 +61,9 @@ pub struct OurAssets {
 
     #[asset(path = "main.map")]
     pub map: Handle<Map>,
+
+    #[asset(path = "bip-bop.ogg")]
+    pub background_music: Handle<bevy_kira_audio::AudioSource>,
 }
 
 #[derive(Default, Clone, Copy, Debug, Reflect, Deserialize)]
