@@ -8,23 +8,12 @@ impl Plugin for EnemyPlugin {
                 SystemSet::on_update(GameState::GamePlay)
                     .with_system(enemy_ai)
                     .with_system(enemy_shoot),
-            )
-            .add_system(enemy_death);
+            );
     }
 }
 
 #[derive(Component)]
 struct BulletParentTag;
-
-//seperate system in case there's other ways to die in the future
-//or an effect :)
-pub fn enemy_death(enemies: Query<(Entity, &Health), Without<Player>>, mut commands: Commands) {
-    for (ent, health) in enemies.iter() {
-        if health.0 <= 0.0 {
-            commands.entity(ent).despawn_recursive();
-        }
-    }
-}
 
 pub fn spawn_enemy(
     mut commands: Commands,
@@ -53,7 +42,7 @@ pub fn spawn_enemy(
         .insert(Enemy {
             bullet_cooldown: Timer::from_seconds(0.6, true),
         })
-        .insert(Health(10.0))
+        .insert(Health(PLAYER_HP))
         .insert(MovementStats { speed: 0.2 })
         .insert(RigidBody::Dynamic)
         .insert(CollisionShape::Sphere { radius: size / 2.0 })

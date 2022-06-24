@@ -7,6 +7,8 @@ use serde::{Deserialize, Serialize};
 
 pub use crate::{assets::OurAssets, map::Map, GameState};
 
+pub const PLAYER_HP: f32 = 10.0;
+
 #[derive(Component)]
 pub struct Player {
     pub bullet_cooldown: Timer,
@@ -122,6 +124,16 @@ pub fn is_layer_collision(event: &CollisionEvent, layer: Layer) -> Option<(Entit
 
 pub fn find_closest(position: Vec2, iter: impl Iterator<Item = GlobalTransform>) -> Option<Vec2> {
     iter.min_by(|transform, other_transform| {
+        (position - transform.translation.truncate())
+            .length()
+            .partial_cmp(&(position - other_transform.translation.truncate()).length())
+            .unwrap()
+    })
+    .map(|transform| transform.translation.truncate())
+}
+
+pub fn find_farthest(position: Vec2, iter: impl Iterator<Item = GlobalTransform>) -> Option<Vec2> {
+    iter.max_by(|transform, other_transform| {
         (position - transform.translation.truncate())
             .length()
             .partial_cmp(&(position - other_transform.translation.truncate()).length())
