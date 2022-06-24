@@ -1,6 +1,9 @@
 use crate::prelude::*;
 use bevy::{render::camera::Camera2d, utils::Duration};
-use bevy_tweening::{lens::TransformPositionLens, lens::TransformScaleLens, *};
+use bevy_tweening::{
+    lens::{TransformPositionLens, TransformScaleLens},
+    *,
+};
 
 pub struct GameOverPlugin;
 
