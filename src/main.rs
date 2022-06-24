@@ -3,6 +3,7 @@
 use bevy::{asset::AssetServerSettings, render::camera::ScalingMode, window::PresentMode};
 use bevy_asset_loader::AssetLoader;
 use bevy_inspector_egui::{WorldInspectorParams, WorldInspectorPlugin};
+use bevy_tweening::TweeningPlugin;
 
 pub const CLEAR: Color = Color::rgb(0.3, 0.3, 0.3);
 pub const HEIGHT: f32 = 900.0;
@@ -10,8 +11,9 @@ pub const RESOLUTION: f32 = 16.0 / 9.0;
 
 use rust_gamejam::{
     assets::GameAssetsPlugin, audio::GameAudioPlugin, bullet::BulletPlugin, debug::DebugPlugin,
-    enemy::EnemyPlugin, external::ExternalPlugin, map::MapPlugin, menus::MenuPlugin, minion::*,
-    player::PlayerPlugin, prelude::*, spawner::SpawnerPlugin, world_ui::BarMaterialPlugin,
+    enemy::EnemyPlugin, external::ExternalPlugin, gameover::GameOverPlugin, map::MapPlugin,
+    menus::MenuPlugin, minion::*, player::PlayerPlugin, prelude::*, spawner::SpawnerPlugin,
+    world_ui::BarMaterialPlugin,
 };
 
 fn main() {
@@ -55,6 +57,8 @@ fn main() {
         .add_plugin(GameAudioPlugin)
         .add_plugin(DebugPlugin)
         .add_plugin(MenuPlugin)
+        .add_plugin(TweeningPlugin)
+        .add_plugin(GameOverPlugin)
         .add_startup_system(spawn_camera)
         .add_system_set(SystemSet::on_enter(GameState::GamePlay).with_system(spawn_background))
         .add_system(toggle_inspector)

@@ -1,6 +1,6 @@
 [package]
 name = "rust-gamejam"
-version = "0.0.4"
+version = "0.0.5"
 edition = "2021"
 default-run = "game"
 
@@ -28,6 +28,7 @@ serde = { version = "1", features = ["derive"] }
 kayak_ui = { git = "https://github.com/StarArawn/kayak_ui", features = [
     "bevy_renderer",
 ] }
+bevy_tweening = "0.4"
 
 [lib]
 path = "src/lib.rs"

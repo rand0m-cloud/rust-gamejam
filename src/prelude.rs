@@ -13,9 +13,12 @@ pub struct Player {
 }
 
 #[derive(Component)]
-pub struct Enemy;
+pub struct Enemy {
+    pub bullet_cooldown: Timer,
+}
 
-#[derive(Component, Debug)]
+#[derive(Component, Debug, Reflect, Default)]
+#[reflect(Component)]
 pub struct Health(pub f32);
 
 #[derive(PhysicsLayer, Copy, Clone)]
@@ -115,4 +118,14 @@ pub fn is_layer_collision(event: &CollisionEvent, layer: Layer) -> Option<(Entit
         Some(1) => Some((entities.1, entities.0)),
         _ => None,
     }
+}
+
+pub fn find_closest(position: Vec2, iter: impl Iterator<Item = GlobalTransform>) -> Option<Vec2> {
+    iter.min_by(|transform, other_transform| {
+        (position - transform.translation.truncate())
+            .length()
+            .partial_cmp(&(position - other_transform.translation.truncate()).length())
+            .unwrap()
+    })
+    .map(|transform| transform.translation.truncate())
 }

@@ -17,7 +17,8 @@ impl Plugin for SpawnerPlugin {
         .add_system_set(
             SystemSet::on_update(GameState::GamePlay)
                 .with_system(minions_spawner_ai)
-                .with_system(spawner_capture_ai),
+                .with_system(spawner_capture_ai)
+                .with_system(spawner_win_con),
         )
         .register_type::<Spawner>();
     }
@@ -237,5 +238,22 @@ fn spawner_capture_ai(
         } else if spawner.capture_progress >= 1.0 {
             commands.entity(spawner_ent).insert(ChickenOrDog::Chicken);
         }
+    }
+}
+
+fn spawner_win_con(
+    spawners: Query<Option<&ChickenOrDog>, With<Spawner>>,
+    mut state: ResMut<State<GameState>>,
+) {
+    let total_spawners = spawners.iter().count();
+    let captured_spawners = spawners.iter().flatten().cloned();
+
+    let (chicken_captured, dog_captured) =
+        captured_spawners.partition::<Vec<_>, _>(|ty| *ty == ChickenOrDog::Chicken);
+
+    if chicken_captured.len() == total_spawners {
+        state.push(GameState::GameOver { won: true }).unwrap();
+    } else if dog_captured.len() == total_spawners {
+        state.push(GameState::GameOver { won: false }).unwrap();
     }
 }
