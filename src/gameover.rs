@@ -48,5 +48,4 @@ fn camera_animation(
     let tween = Tracks::new([scale_tween, transform_tween]);
 
     commands.entity(camera).insert(Animator::new(tween));
-    //.insert(Animator::new(transform_tween));
 }
