@@ -191,7 +191,8 @@ fn spawn_player(
             flip_x: false,
             timer: Timer::from_seconds(1.0 / 10.0, true),
         })
-        .insert(Name::new("Player"));
+        .insert(Name::new("Player"))
+        .insert(ChickenOrDog::Chicken);
 
     commands
         .spawn_bundle(TransformBundle::default())
