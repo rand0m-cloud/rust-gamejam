@@ -25,12 +25,15 @@ struct WallSquare;
 #[derive(Component)]
 struct PlayerSpawn;
 #[derive(Component)]
+struct EnemySpawn;
+#[derive(Component)]
 struct Spawner;
 
 fn save_map(
     map: Query<&Transform, With<WallSquare>>,
     spawners_query: Query<(&Transform, &ChickenOrDog), With<Spawner>>,
     player_spawn: Query<&Transform, With<PlayerSpawn>>,
+    enemy_spawn: Query<&Transform, With<EnemySpawn>>,
     input: Res<Input<KeyCode>>,
 ) {
     if input.just_pressed(KeyCode::Return) {
@@ -48,11 +51,13 @@ fn save_map(
             spawn_locations.push((transform.translation.truncate(), *chicken));
         }
         let player_spawn = player_spawn.single().translation.truncate();
+        let enemy_spawn = enemy_spawn.single().translation.truncate();
 
         let data = Map {
             rects,
             spawn_locations,
             player_spawn,
+            enemy_spawn,
         };
 
         let pretty = PrettyConfig::new()
@@ -126,7 +131,22 @@ fn load_map(
                 ..default()
             })
             .insert(PlayerSpawn)
-            .insert(Name::new("Wall"))
+            .insert(Name::new("Player"))
+            .insert_bundle(PickableBundle::default());
+        commands
+            .spawn_bundle(MaterialMesh2dBundle {
+                mesh: meshes.add(Mesh::from(shape::Quad::default())).into(),
+                material: materials.add(ColorMaterial::from(Color::AQUAMARINE)),
+                transform: Transform {
+                    translation: map.enemy_spawn.extend(0.1),
+                    scale: Vec3::splat(0.1),
+                    //rotation: Quat::from_axis_angle(Vec3::Z, rect.rotation),
+                    ..Default::default()
+                },
+                ..default()
+            })
+            .insert(EnemySpawn)
+            .insert(Name::new("Enemy"))
             .insert_bundle(PickableBundle::default());
     }
 }

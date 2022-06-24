@@ -41,11 +41,9 @@ impl MinionBundle {
         assets: &Res<OurAssets>,
         spawn_location: Vec2,
     ) -> anyhow::Result<Entity> {
-        let config: DogMinionConfig = ron::de::from_reader(
-            std::fs::File::open("assets/config/dog_minion.ron")
-                .context("failed to open assets/config/dog_minion.ron")?,
-        )
-        .context("failed to deserialize DogMinionConfig")?;
+        let config: DogMinionConfig =
+            ron::de::from_str(include_str!("../assets/config/dog_minion.ron"))
+                .context("failed to deserialize DogMinionConfig")?;
         let size = 0.25;
 
         let ent = commands
@@ -75,6 +73,7 @@ impl MinionBundle {
                 rotation_constraints: RotationConstraints::lock(),
                 collision_layer: CollisionLayers::all_masks::<Layer>().with_group(Layer::Enemy),
             })
+            .insert(Name::new("Puppy"))
             .id();
         Ok(ent)
     }
@@ -84,11 +83,9 @@ impl MinionBundle {
         assets: &Res<OurAssets>,
         spawn_location: Vec2,
     ) -> anyhow::Result<Entity> {
-        let config: ChickenMinionConfig = ron::de::from_reader(
-            std::fs::File::open("assets/config/chicken_minion.ron")
-                .context("failed to open assets/config/chicken_minion.ron")?,
-        )
-        .context("failed to deserialize ChickenMinionConfig")?;
+        let config: ChickenMinionConfig =
+            ron::de::from_str(include_str!("../assets/config/chicken_minion.ron"))
+                .context("failed to deserialize ChickenMinionConfig")?;
         let size = 0.25;
 
         let ent = commands
@@ -109,7 +106,7 @@ impl MinionBundle {
                 movement_stats: MovementStats {
                     speed: config.speed,
                 },
-                minion_type: ChickenOrDog::Dog,
+                minion_type: ChickenOrDog::Chicken,
                 minion: Minion,
                 hp: Health(config.hp),
                 rigid_body: RigidBody::Dynamic,
@@ -117,11 +114,15 @@ impl MinionBundle {
                 rotation_constraints: RotationConstraints::lock(),
                 collision_layer: CollisionLayers::all_masks::<Layer>().with_group(Layer::Enemy),
             })
+            .insert(Name::new("Chick"))
             .id();
         Ok(ent)
     }
 }
 
+/// # Minion AI
+/// - Minions look for the closest enemy, enemy minion, or capturable spawner
+/// - If there is no other targets, they follow the player
 pub fn minions_ai(
     mut minion_query: Query<
         (
@@ -132,31 +133,45 @@ pub fn minions_ai(
         ),
         (With<Minion>, Without<Spawner>),
     >,
+    targets_query: Query<
+        (&GlobalTransform, Option<&ChickenOrDog>),
+        Or<(With<Spawner>, With<Player>, With<Enemy>)>,
+    >,
     player_query: Query<&GlobalTransform, With<Player>>,
-    enemy_query: Query<&GlobalTransform, With<Enemy>>,
 
     time: Res<Time>,
 ) {
+    fn find_closest(position: Vec2, iter: impl Iterator<Item = GlobalTransform>) -> Option<Vec2> {
+        iter.min_by(|transform, other_transform| {
+            (position - transform.translation.truncate())
+                .length()
+                .partial_cmp(&(position - other_transform.translation.truncate()).length())
+                .unwrap()
+        })
+        .map(|transform| transform.translation.truncate())
+    }
+
     for (minion_type, global_transform, mut transform, movement_stats) in minion_query.iter_mut() {
-        let position = global_transform.translation;
-        let target_position = if *minion_type == ChickenOrDog::Chicken {
-            if let Some(closest_enemy) = enemy_query.iter().min_by(|transform, other_transform| {
-                (position - transform.translation)
-                    .length()
-                    .partial_cmp(&(position - other_transform.translation).length())
-                    .unwrap()
-            }) {
-                closest_enemy.translation
+        let position = global_transform.translation.truncate();
+
+        let enemy_targets = targets_query
+            .iter()
+            .filter_map(|(transform, target_minion_type)| match target_minion_type {
+                None => Some(*transform),
+                Some(ty) if ty != minion_type => Some(*transform),
+                _ => None,
+            });
+
+        let target_position = {
+            if let Some(closest_target) = find_closest(position, enemy_targets) {
+                closest_target
             } else {
-                //XXX gross
-                player_query.single().translation
+                player_query.single().translation.truncate()
             }
-        } else {
-            player_query.single().translation
         };
 
         let dir = target_position - position;
-        let dir = dir.try_normalize().unwrap_or_default();
+        let dir = dir.try_normalize().unwrap_or_default().extend(0.0);
         transform.translation += dir * movement_stats.speed * time.delta_seconds();
     }
 }

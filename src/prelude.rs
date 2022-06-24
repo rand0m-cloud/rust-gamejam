@@ -15,7 +15,7 @@ pub struct Player {
 #[derive(Component)]
 pub struct Enemy;
 
-#[derive(Component)]
+#[derive(Component, Debug)]
 pub struct Health(pub f32);
 
 #[derive(PhysicsLayer, Copy, Clone)]

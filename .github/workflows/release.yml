@@ -1,0 +1,37 @@
+name: Build WASM and deploy to Itch.io
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  ITCH_USERNAME: logicprojects
+  ITCH_GAME_ID: placeholder-game-title
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy - Itch.io
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: wasm32-unknown-unknown
+          override: true
+      - uses: Swatinem/rust-cache@v1
+      - name: Install wasm-bindgen-cli
+        run: |
+          cargo install wasm-bindgen-cli
+      - name: Run WASM build script
+        run: |
+          cd scripts && ./make_wasm_build.sh
+      - uses: KikimoraGames/itch-publish@v0.0.3
+        with:
+          butlerApiKey: ${{secrets.BUTLER_API_KEY}}
+          gameData: ./dist/
+          itchUsername: ${{env.ITCH_USERNAME}}
+          itchGameId: ${{env.ITCH_GAME_ID}}
+          buildChannel: web
