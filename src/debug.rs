@@ -8,6 +8,7 @@ impl Plugin for DebugPlugin {
         if std::env::var("SLOWDOWN").is_ok() {
             app.add_system(slow_down);
         }
+        app.register_type::<Health>();
     }
 }
 
