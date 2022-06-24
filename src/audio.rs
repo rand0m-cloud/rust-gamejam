@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use bevy_kira_audio::{Audio, AudioApp, AudioChannel, AudioPlugin, AudioSource};
+use bevy_kira_audio::{AudioApp, AudioChannel, AudioPlugin};
 
 pub struct GameAudioPlugin;
 
