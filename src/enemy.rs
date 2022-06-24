@@ -63,8 +63,8 @@ pub fn enemy_ai(
 ) {
     let player_translation = query.p0().single().translation;
     for (enemy_global_transform, mut enemy_transform, movement_stats) in query.p1().iter_mut() {
-        let dir = player_translation - enemy_global_transform.translation;
-        let dir = dir.try_normalize().unwrap_or_default();
+        let dir = player_translation.truncate() - enemy_global_transform.translation.truncate();
+        let dir = dir.try_normalize().unwrap_or_default().extend(0.0);
 
         enemy_transform.translation += dir * movement_stats.speed * time.delta_seconds();
     }
