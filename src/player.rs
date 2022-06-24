@@ -14,7 +14,8 @@ impl Plugin for PlayerPlugin {
                 SystemSet::on_update(GameState::GamePlay)
                     .with_system(player_movement)
                     .with_system(camera_follow.after(player_movement))
-                    .with_system(player_shoot),
+                    .with_system(player_shoot)
+                    .with_system(player_death),
             );
     }
 }
@@ -195,4 +196,47 @@ fn spawn_player(
         .spawn_bundle(TransformBundle::default())
         .insert(BulletParentTag)
         .insert(Name::new("Bullets"));
+}
+
+fn player_death(
+    mut players: Query<
+        (&mut Transform, &mut Health, &ChickenOrDog),
+        Or<(With<Player>, With<Enemy>)>,
+    >,
+    spawners: Query<(&GlobalTransform, &ChickenOrDog), With<Spawner>>,
+
+    map: Res<Assets<Map>>,
+    our_assets: Res<OurAssets>,
+) {
+    for (mut transform, mut health, team) in players.iter_mut() {
+        if health.0 <= 0.0 {
+            // hard-coded respawn health here
+            health.0 = 10.0;
+
+            let friendly_spawners = spawners
+                .iter()
+                .filter_map(|(transform, spawner_team)| {
+                    if team == spawner_team {
+                        Some(transform)
+                    } else {
+                        None
+                    }
+                })
+                .cloned();
+
+            let respawn_location =
+                find_farthest(transform.translation.truncate(), friendly_spawners).unwrap_or_else(
+                    || {
+                        let map = map.get(our_assets.map.clone()).unwrap();
+                        match team {
+                            ChickenOrDog::Chicken => map.player_spawn,
+                            ChickenOrDog::Dog => map.enemy_spawn,
+                        }
+                    },
+                );
+
+            let z = transform.translation.z;
+            transform.translation = respawn_location.extend(z);
+        }
+    }
 }

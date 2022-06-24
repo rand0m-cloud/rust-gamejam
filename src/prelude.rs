@@ -129,3 +129,13 @@ pub fn find_closest(position: Vec2, iter: impl Iterator<Item = GlobalTransform>)
     })
     .map(|transform| transform.translation.truncate())
 }
+
+pub fn find_farthest(position: Vec2, iter: impl Iterator<Item = GlobalTransform>) -> Option<Vec2> {
+    iter.max_by(|transform, other_transform| {
+        (position - transform.translation.truncate())
+            .length()
+            .partial_cmp(&(position - other_transform.translation.truncate()).length())
+            .unwrap()
+    })
+    .map(|transform| transform.translation.truncate())
+}

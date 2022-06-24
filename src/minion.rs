@@ -5,6 +5,7 @@ pub struct MinionPlugin;
 impl Plugin for MinionPlugin {
     fn build(&self, app: &mut App) {
         app.add_system_set(SystemSet::on_update(GameState::GamePlay).with_system(minions_ai))
+            .add_system(minion_death)
             .register_type::<Spawner>();
     }
 }
@@ -163,5 +164,13 @@ pub fn minions_ai(
         let dir = target_position - position;
         let dir = dir.try_normalize().unwrap_or_default().extend(0.0);
         transform.translation += dir * movement_stats.speed * time.delta_seconds();
+    }
+}
+
+fn minion_death(minions: Query<(Entity, &Health), With<Minion>>, mut commands: Commands) {
+    for (ent, health) in minions.iter() {
+        if health.0 <= 0.0 {
+            commands.entity(ent).despawn_recursive();
+        }
     }
 }
