@@ -2,6 +2,7 @@ pub use crate::external::collisions::Collisions;
 pub use anyhow::Context;
 pub use bevy::prelude::*;
 use bevy::utils::Duration;
+use bevy_inspector_egui::Inspectable;
 pub use heron::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -21,6 +22,13 @@ pub struct Player {
 pub struct Enemy {
     pub range: f32,
     pub bullet_cooldown: Timer,
+}
+
+#[derive(Component, Reflect, Debug, Default)]
+#[reflect(Component)]
+pub struct RespawnTimer {
+    pub is_dead: bool,
+    pub timer: Timer,
 }
 
 #[derive(Component, Debug, Reflect, Default)]
@@ -48,6 +56,7 @@ pub struct Animation {
     pub playing_alt: bool,
     pub playing: bool,
     pub flip_x: bool,
+    pub flip_y: bool,
     pub timer: Timer,
 }
 

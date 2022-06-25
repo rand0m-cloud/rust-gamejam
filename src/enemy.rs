@@ -40,6 +40,7 @@ pub fn spawn_enemy(
             playing_alt: false,
             playing: true,
             flip_x: true,
+            flip_y: false,
             timer: Timer::from_seconds(2.0 / 10.0, true),
         })
         .insert(Enemy {
@@ -53,6 +54,10 @@ pub fn spawn_enemy(
         .insert(RotationConstraints::lock())
         .insert(ChickenOrDog::Dog)
         .insert(CollisionLayers::all_masks::<Layer>().with_group(Layer::Enemy))
+        .insert(RespawnTimer {
+            is_dead: false,
+            timer: Timer::from_seconds(0.0, false),
+        })
         .insert(Name::new("Enemy"));
 
     commands
@@ -62,7 +67,15 @@ pub fn spawn_enemy(
 }
 
 fn enemy_ai(
-    mut minion_query: Query<(&GlobalTransform, &mut Transform, &MovementStats), With<Enemy>>,
+    mut minion_query: Query<
+        (
+            &GlobalTransform,
+            &mut Transform,
+            &MovementStats,
+            &RespawnTimer,
+        ),
+        With<Enemy>,
+    >,
     targets_query: Query<
         (&GlobalTransform, Option<&ChickenOrDog>),
         Or<(With<Spawner>, With<Player>, With<Enemy>)>,
@@ -71,7 +84,10 @@ fn enemy_ai(
     physics_world: PhysicsWorld,
     time: Res<Time>,
 ) {
-    for (global_transform, mut transform, movement_stats) in minion_query.iter_mut() {
+    for (global_transform, mut transform, movement_stats, respawn) in minion_query.iter_mut() {
+        if respawn.is_dead {
+            continue;
+        }
         let position = global_transform.translation.truncate();
 
         let enemy_targets = targets_query
@@ -111,7 +127,13 @@ fn enemy_ai(
 
 fn enemy_shoot(
     mut commands: Commands,
-    mut enemies: Query<(&mut Enemy, &GlobalTransform, &Transform)>,
+    mut enemies: Query<(
+        &mut Enemy,
+        &GlobalTransform,
+        &Transform,
+        &mut Animation,
+        &RespawnTimer,
+    )>,
     targets: Query<(&GlobalTransform, &ChickenOrDog), Or<(With<Player>, With<Minion>)>>,
     physics_world: PhysicsWorld,
     parent: Query<Entity, With<BulletParentTag>>,
@@ -122,7 +144,13 @@ fn enemy_shoot(
     let parent = parent.single();
     let delta = time.delta();
 
-    for (mut enemy, global_transform, transform) in enemies.iter_mut() {
+    for (mut enemy, global_transform, transform, mut animation, respawn) in enemies.iter_mut() {
+        if respawn.is_dead {
+            animation.flip_y = true;
+            continue;
+        }
+        animation.flip_y = false;
+
         if !enemy.bullet_cooldown.finished() {
             enemy.bullet_cooldown.tick(delta);
             continue;

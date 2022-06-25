@@ -16,6 +16,7 @@ impl Plugin for GameAssetsPlugin {
 
 fn animate_frames(mut graphics: Query<(&mut TextureAtlasSprite, &mut Animation)>, time: Res<Time>) {
     for (mut sprite, mut animation) in graphics.iter_mut() {
+        sprite.flip_y = animation.flip_y;
         if !animation.playing && !animation.playing_alt {
             continue;
         }

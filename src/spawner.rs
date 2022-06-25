@@ -164,6 +164,7 @@ fn minions_spawner_ai(
                             playing_alt: false,
                             playing: true,
                             flip_x: false,
+                            flip_y: false,
                             timer: Timer::from_seconds(1.0 / 10.0, true),
                         });
                     spawned.push(ent);
@@ -187,8 +188,8 @@ fn spawner_capture_ai(
     mut commands: Commands,
     mut spawners: Query<(&Collisions, &mut Spawner, Entity, &Children)>,
     mut ui_query: Query<&mut Percentage>,
-    player: Query<&Player, Without<Minion>>,
-    enemy: Query<&Enemy, Without<Minion>>,
+    player: Query<(&Player, &RespawnTimer), Without<Minion>>,
+    enemy: Query<(&Enemy, &RespawnTimer), Without<Minion>>,
     minions: Query<&ChickenOrDog, (With<Minion>, Without<Spawner>)>,
     time: Res<Time>,
 ) {
@@ -199,13 +200,23 @@ fn spawner_capture_ai(
 
         let mut progress_multiplier = 0.0;
 
-        if collisions.entities().any(|ent| player.get(ent).is_ok()) {
-            progress_multiplier += 1.0;
-        }
+        collisions.entities().for_each(|ent| {
+            if let Ok((_, respawn)) = player.get(ent) {
+                if !respawn.is_dead {
+                    progress_multiplier += 1.0;
+                }
+            }
+        });
 
         progress_multiplier -= collisions
             .entities()
-            .filter(|ent| enemy.get(*ent).is_ok())
+            .filter(|ent| {
+                if let Ok((_, respawn)) = enemy.get(*ent) {
+                    !respawn.is_dead
+                } else {
+                    false
+                }
+            })
             .count() as f32;
 
         let minion_advantage: f32 = collisions

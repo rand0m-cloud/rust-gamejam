@@ -32,7 +32,7 @@ fn camera_follow(
 
 fn player_shoot(
     mut commands: Commands,
-    mut player: Query<(&Transform, &mut Animation, &mut Player)>,
+    mut player: Query<(&Transform, &mut Animation, &mut Player, &RespawnTimer)>,
     parent: Query<Entity, With<BulletParentTag>>,
 
     keyboard: Res<Input<KeyCode>>,
@@ -42,7 +42,13 @@ fn player_shoot(
     assets: Res<OurAssets>,
 ) {
     let parent = parent.single();
-    let (transform, mut animation, mut player) = player.single_mut();
+    let (transform, mut animation, mut player, respawn) = player.single_mut();
+    if respawn.is_dead {
+        animation.flip_y = true;
+        animation.playing = false;
+        return;
+    }
+    animation.flip_y = false;
 
     if !player.bullet_cooldown.finished() {
         player.bullet_cooldown.tick(time.delta());
@@ -126,12 +132,23 @@ fn player_shoot(
 }
 
 fn player_movement(
-    mut player: Query<(&mut Transform, &mut Animation, &MovementStats), With<Player>>,
+    mut player: Query<
+        (
+            &mut Transform,
+            &mut Animation,
+            &MovementStats,
+            &RespawnTimer,
+        ),
+        With<Player>,
+    >,
     time: Res<Time>,
     keyboard: Res<Input<KeyCode>>,
     axis: Res<Axis<GamepadAxis>>,
 ) {
-    let (mut transform, mut animation, stats) = player.single_mut();
+    let (mut transform, mut animation, stats, respawn) = player.single_mut();
+    if respawn.is_dead {
+        return;
+    }
 
     animation.playing = false;
     for id in 0..16 {
@@ -206,10 +223,15 @@ fn spawn_player(
             playing_alt: false,
             playing: false,
             flip_x: false,
+            flip_y: false,
             timer: Timer::from_seconds(1.0 / 10.0, true),
         })
         .insert(Name::new("Player"))
         .insert(ChickenOrDog::Chicken)
+        .insert(RespawnTimer {
+            is_dead: false,
+            timer: Timer::from_seconds(0.0, false),
+        })
         .insert(Health(PLAYER_HP));
 
     commands
@@ -220,18 +242,29 @@ fn spawn_player(
 
 fn player_death(
     mut players: Query<
-        (&mut Transform, &mut Health, &ChickenOrDog),
+        (
+            &mut Transform,
+            &mut Health,
+            &ChickenOrDog,
+            &mut RespawnTimer,
+        ),
         Or<(With<Player>, With<Enemy>)>,
     >,
     spawners: Query<(&GlobalTransform, &ChickenOrDog), With<Spawner>>,
-
+    time: Res<Time>,
     map: Res<Assets<Map>>,
     our_assets: Res<OurAssets>,
 ) {
-    for (mut transform, mut health, team) in players.iter_mut() {
-        if health.0 <= 0.0 {
+    for (mut transform, mut health, team, mut respawn) in players.iter_mut() {
+        if health.0 <= 0.0 && !respawn.is_dead {
+            respawn.timer = Timer::from_seconds(2.0, false);
+            respawn.is_dead = true;
             health.0 = PLAYER_HP;
-
+        }
+        respawn.timer.tick(time.delta());
+        if respawn.timer.just_finished() {
+            health.0 = PLAYER_HP;
+            respawn.is_dead = false;
             let friendly_spawners = spawners
                 .iter()
                 .filter_map(|(transform, spawner_team)| {
