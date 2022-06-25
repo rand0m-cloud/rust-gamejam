@@ -8,7 +8,7 @@ on:
 
 env:
   ITCH_USERNAME: logicprojects
-  ITCH_GAME_ID: placeholder-game-title
+  ITCH_GAME_ID: fight-for-the-frontier
 
 jobs:
   deploy:
