@@ -1,8 +1,10 @@
 pub use crate::external::collisions::Collisions;
 pub use anyhow::Context;
 pub use bevy::prelude::*;
-use bevy::utils::Duration;
 pub use heron::prelude::*;
+
+use bevy::utils::Duration;
+use bevy_inspector_egui::Inspectable;
 use serde::{Deserialize, Serialize};
 
 pub use crate::{assets::OurAssets, map::Map, GameState};
@@ -12,12 +14,14 @@ pub const MINION_MELEE_DMG: f32 = 0.5;
 pub const MINION_MELEE_COOLDOWN: f32 = 0.75;
 pub const MINION_MELEE_RANGE: f32 = 0.25;
 
-#[derive(Component)]
+#[derive(Component, Reflect, Default)]
+#[reflect(Component)]
 pub struct Player {
     pub bullet_cooldown: Timer,
 }
 
-#[derive(Component)]
+#[derive(Component, Reflect, Default)]
+#[reflect(Component)]
 pub struct Enemy {
     pub range: f32,
     pub bullet_cooldown: Timer,
@@ -65,29 +69,37 @@ pub struct Animation {
     pub timer: Timer,
 }
 
-#[derive(Component)]
+#[derive(Component, Reflect, Default)]
+#[reflect(Component)]
 pub struct MovementStats {
     pub speed: f32,
 }
 
-#[derive(Component)]
+#[derive(Component, Reflect, Default)]
+#[reflect(Component)]
 pub struct Bullet {
     pub speed: f32,
     pub direction: Vec2,
 }
 
-#[derive(Component)]
+#[derive(Component, Reflect, Default)]
+#[reflect(Component)]
 pub struct RectCollider;
 
-#[derive(Component)]
+#[derive(Component, Reflect, Default)]
+#[reflect(Component)]
 pub struct CircleCollider;
 
-#[derive(Component)]
+#[derive(Component, Reflect, Default)]
+#[reflect(Component)]
 pub struct Minion {
     pub attack_cooldown: Timer,
 }
 
-#[derive(Copy, Clone, Debug, Component, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(
+    Copy, Clone, Debug, Component, PartialEq, Eq, Serialize, Deserialize, Reflect, Inspectable,
+)]
+#[reflect(Component)]
 pub enum ChickenOrDog {
     Chicken,
     Dog,
