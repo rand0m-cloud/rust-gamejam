@@ -139,19 +139,22 @@ pub fn minions_ai(
             &ChickenOrDog,
             &GlobalTransform,
             &mut Transform,
+            &mut Animation,
             &MovementStats,
         ),
         (With<Minion>, Without<Spawner>),
     >,
     targets_query: Query<
         (&GlobalTransform, Option<&ChickenOrDog>),
-        Or<(With<Spawner>, With<Player>, With<Enemy>)>,
+        Or<(With<Spawner>, With<Player>, With<Enemy>, With<Minion>)>,
     >,
     player_query: Query<&GlobalTransform, With<Player>>,
     physics_world: PhysicsWorld,
     time: Res<Time>,
 ) {
-    for (minion_type, global_transform, mut transform, movement_stats) in minion_query.iter_mut() {
+    for (minion_type, global_transform, mut transform, mut animation, movement_stats) in
+        minion_query.iter_mut()
+    {
         let position = global_transform.translation.truncate();
 
         let enemy_targets = targets_query
@@ -185,6 +188,9 @@ pub fn minions_ai(
 
         let dir = target_position - position;
         let dir = dir.try_normalize().unwrap_or_default().extend(0.0);
+        if !animation.playing_alt {
+            animation.flip_x = dir.x > 0.0;
+        }
         transform.translation += dir * movement_stats.speed * time.delta_seconds();
     }
 }
@@ -198,7 +204,7 @@ fn minion_death(minions: Query<(Entity, &Health), With<Minion>>, mut commands: C
 }
 
 fn minions_attack(
-    mut minions: Query<(&mut Minion, &GlobalTransform, &ChickenOrDog)>,
+    mut minions: Query<(&mut Minion, &GlobalTransform, &ChickenOrDog, &mut Animation)>,
     mut targets: Query<
         (&GlobalTransform, &ChickenOrDog, &mut Health),
         Or<(With<Player>, With<Minion>, With<Enemy>)>,
@@ -208,7 +214,7 @@ fn minions_attack(
 ) {
     let delta = time.delta();
 
-    for (mut minion, global_transform, team) in minions.iter_mut() {
+    for (mut minion, global_transform, team, mut animation) in minions.iter_mut() {
         if !minion.attack_cooldown.finished() {
             minion.attack_cooldown.tick(delta);
             continue;
@@ -221,6 +227,7 @@ fn minions_attack(
             .filter_map(|(target_transform, enemy_team, health)| {
                 let distance = (target_transform.translation.truncate() - position).length();
                 if team != enemy_team && distance <= MINION_MELEE_RANGE {
+                    animation.flip_x = target_transform.translation.x - position.x > 0.0;
                     Some(health)
                 } else {
                     None
@@ -230,6 +237,8 @@ fn minions_attack(
 
         if let Some(mut enemy_hp) = enemy_target {
             minion.attack_cooldown.tick(time.delta());
+            animation.playing_alt = true;
+            animation.current_frame = 0;
             enemy_hp.0 -= MINION_MELEE_DMG;
         }
     }

@@ -2,7 +2,6 @@ pub use crate::external::collisions::Collisions;
 pub use anyhow::Context;
 pub use bevy::prelude::*;
 use bevy::utils::Duration;
-use bevy_inspector_egui::Inspectable;
 pub use heron::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -11,7 +10,7 @@ pub use crate::{assets::OurAssets, map::Map, GameState};
 pub const PLAYER_HP: f32 = 10.0;
 pub const MINION_MELEE_DMG: f32 = 0.5;
 pub const MINION_MELEE_COOLDOWN: f32 = 0.75;
-pub const MINION_MELEE_RANGE: f32 = 0.3;
+pub const MINION_MELEE_RANGE: f32 = 0.2;
 
 #[derive(Component)]
 pub struct Player {
