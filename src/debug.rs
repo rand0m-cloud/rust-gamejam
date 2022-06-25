@@ -9,6 +9,7 @@ impl Plugin for DebugPlugin {
             app.add_system(slow_down);
         }
         app.register_type::<Health>();
+        app.register_type::<RespawnTimer>();
     }
 }
 

@@ -10,7 +10,7 @@ impl Plugin for BulletPlugin {
 }
 
 pub fn bullet_damage(
-    mut entities: Query<(&mut Health, &ChickenOrDog)>,
+    mut entities: Query<(&mut Health, &ChickenOrDog, Option<&mut DamageFlash>)>,
     bullets: Query<(&Collisions, &ChickenOrDog), With<Bullet>>,
 ) {
     bullets
@@ -21,9 +21,12 @@ pub fn bullet_damage(
                 .map(move |collision| (collision, origin_team))
         })
         .for_each(|(entity, origin_team)| {
-            if let Ok((mut health, entity_team)) = entities.get_mut(entity) {
+            if let Ok((mut health, entity_team, damage)) = entities.get_mut(entity) {
                 if origin_team != entity_team {
                     health.0 -= 1.0;
+                    if let Some(mut damage) = damage {
+                        damage.timer = Timer::from_seconds(0.1, true);
+                    }
                 }
             }
         });

@@ -1,6 +1,10 @@
 use bevy::render::camera::Camera2d;
+use rand::Rng;
 
-use crate::{assets::ChickenWalkFrames, prelude::*};
+use crate::{
+    assets::{BulletFrames, ChickenWalkFrames, Rotate},
+    prelude::*,
+};
 
 pub struct PlayerPlugin;
 
@@ -32,17 +36,23 @@ fn camera_follow(
 
 fn player_shoot(
     mut commands: Commands,
-    mut player: Query<(&Transform, &mut Player)>,
+    mut player: Query<(&Transform, &mut Animation, &mut Player, &RespawnTimer)>,
     parent: Query<Entity, With<BulletParentTag>>,
 
     keyboard: Res<Input<KeyCode>>,
     axis: Res<Axis<GamepadAxis>>,
     time: Res<Time>,
 
-    assets: Res<OurAssets>,
+    bullets: Res<BulletFrames>,
 ) {
     let parent = parent.single();
-    let (transform, mut player) = player.single_mut();
+    let (transform, mut animation, mut player, respawn) = player.single_mut();
+    if respawn.is_dead {
+        animation.flip_y = true;
+        animation.playing = false;
+        return;
+    }
+    animation.flip_y = false;
 
     if !player.bullet_cooldown.finished() {
         player.bullet_cooldown.tick(time.delta());
@@ -77,20 +87,29 @@ fn player_shoot(
         target_dir = target_dir.normalize();
 
         let mut transform = *transform;
-        transform.translation.z += 100.0;
+        transform.translation.z -= 10.0;
 
         let size = 0.1;
 
         player.bullet_cooldown.tick(time.delta());
 
+        animation.current_frame = 0;
+        animation.playing_alt = true;
+        if target_dir.x < 0.0 {
+            animation.flip_x = true;
+            transform.translation.x -= 0.08;
+        } else {
+            animation.flip_x = false;
+            transform.translation.x += 0.08;
+        }
+
+        let num = rand::thread_rng().gen_range(0..2);
+        let sprite = bullets.frames[num].clone();
+
         let bullet = commands
-            .spawn_bundle(SpriteBundle {
-                sprite: Sprite {
-                    color: Color::DARK_GREEN,
-                    custom_size: Some(Vec2::splat(size)),
-                    ..default()
-                },
-                texture: assets.placeholder.clone(),
+            .spawn_bundle(SpriteSheetBundle {
+                sprite,
+                texture_atlas: bullets.texture.clone(),
                 transform,
                 ..default()
             })
@@ -98,6 +117,7 @@ fn player_shoot(
                 speed: 0.2,
                 direction: target_dir,
             })
+            .insert(Rotate)
             .insert(ChickenOrDog::Chicken)
             .insert(RigidBody::Sensor)
             .insert(CollisionShape::Sphere { radius: size / 2.0 })
@@ -116,12 +136,23 @@ fn player_shoot(
 }
 
 fn player_movement(
-    mut player: Query<(&mut Transform, &mut Animation, &MovementStats), With<Player>>,
+    mut player: Query<
+        (
+            &mut Transform,
+            &mut Animation,
+            &MovementStats,
+            &RespawnTimer,
+        ),
+        With<Player>,
+    >,
     time: Res<Time>,
     keyboard: Res<Input<KeyCode>>,
     axis: Res<Axis<GamepadAxis>>,
 ) {
-    let (mut transform, mut animation, stats) = player.single_mut();
+    let (mut transform, mut animation, stats, respawn) = player.single_mut();
+    if respawn.is_dead {
+        return;
+    }
 
     animation.playing = false;
     for id in 0..16 {
@@ -140,20 +171,28 @@ fn player_movement(
     if keyboard.pressed(KeyCode::D) {
         transform.translation.x += time.delta_seconds() * stats.speed;
         animation.playing = true;
-        animation.flip_x = true;
+        if !animation.playing_alt {
+            animation.flip_x = true;
+        }
     }
     if keyboard.pressed(KeyCode::A) {
         transform.translation.x -= time.delta_seconds() * stats.speed;
         animation.playing = true;
-        animation.flip_x = false;
+        if !animation.playing_alt {
+            animation.flip_x = false;
+        }
     }
     if keyboard.pressed(KeyCode::W) {
         transform.translation.y += time.delta_seconds() * stats.speed;
-        animation.playing = true;
+        if !animation.playing_alt {
+            animation.playing = true;
+        }
     }
     if keyboard.pressed(KeyCode::S) {
         transform.translation.y -= time.delta_seconds() * stats.speed;
-        animation.playing = true;
+        if !animation.playing_alt {
+            animation.playing = true;
+        }
     }
 }
 
@@ -174,22 +213,32 @@ fn spawn_player(
             ..default()
         })
         .insert(Player {
-            bullet_cooldown: Timer::from_seconds(0.3, true),
+            bullet_cooldown: Timer::from_seconds(0.35, true),
         })
         .insert(MovementStats { speed: 0.5 })
         .insert(RigidBody::Dynamic)
         .insert(CollisionShape::Sphere { radius: size / 2.0 })
         .insert(RotationConstraints::lock())
         .insert(CollisionLayers::all_masks::<Layer>().with_group(Layer::Player))
+        .insert(DamageFlash {
+            timer: Timer::from_seconds(0.0, false),
+        })
         .insert(Animation {
             current_frame: 0,
             frames: chicken_walk.frames.iter().map(|f| f.index).collect(),
+            alt_frames: Some(chicken_walk.alt_frames.iter().map(|f| f.index).collect()),
+            playing_alt: false,
             playing: false,
             flip_x: false,
+            flip_y: false,
             timer: Timer::from_seconds(1.0 / 10.0, true),
         })
         .insert(Name::new("Player"))
         .insert(ChickenOrDog::Chicken)
+        .insert(RespawnTimer {
+            is_dead: false,
+            timer: Timer::from_seconds(0.0, false),
+        })
         .insert(Health(PLAYER_HP));
 
     commands
@@ -200,18 +249,29 @@ fn spawn_player(
 
 fn player_death(
     mut players: Query<
-        (&mut Transform, &mut Health, &ChickenOrDog),
+        (
+            &mut Transform,
+            &mut Health,
+            &ChickenOrDog,
+            &mut RespawnTimer,
+        ),
         Or<(With<Player>, With<Enemy>)>,
     >,
     spawners: Query<(&GlobalTransform, &ChickenOrDog), With<Spawner>>,
-
+    time: Res<Time>,
     map: Res<Assets<Map>>,
     our_assets: Res<OurAssets>,
 ) {
-    for (mut transform, mut health, team) in players.iter_mut() {
-        if health.0 <= 0.0 {
+    for (mut transform, mut health, team, mut respawn) in players.iter_mut() {
+        if health.0 <= 0.0 && !respawn.is_dead {
+            respawn.timer = Timer::from_seconds(2.0, false);
+            respawn.is_dead = true;
             health.0 = PLAYER_HP;
-
+        }
+        respawn.timer.tick(time.delta());
+        if respawn.timer.just_finished() {
+            health.0 = PLAYER_HP;
+            respawn.is_dead = false;
             let friendly_spawners = spawners
                 .iter()
                 .filter_map(|(transform, spawner_team)| {

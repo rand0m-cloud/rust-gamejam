@@ -1,4 +1,5 @@
 #![allow(clippy::type_complexity)]
+#![allow(clippy::too_many_arguments)]
 
 pub mod assets;
 pub mod audio;
@@ -10,6 +11,7 @@ pub mod gameover;
 pub mod map;
 pub mod menus;
 pub mod minion;
+pub mod particles;
 pub mod player;
 pub mod prelude;
 pub mod spawner;
@@ -19,6 +21,7 @@ pub mod world_ui;
 pub enum GameState {
     Splash,
     MainMenu,
+    Tutorial,
     GamePlay,
     GameOver { won: bool },
 }

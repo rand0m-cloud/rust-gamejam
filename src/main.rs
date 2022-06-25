@@ -1,4 +1,5 @@
 #![allow(clippy::type_complexity)]
+#![allow(clippy::too_many_arguments)]
 
 use bevy::{asset::AssetServerSettings, render::camera::ScalingMode, window::PresentMode};
 use bevy_asset_loader::AssetLoader;
@@ -12,8 +13,8 @@ pub const RESOLUTION: f32 = 16.0 / 9.0;
 use rust_gamejam::{
     assets::GameAssetsPlugin, audio::GameAudioPlugin, bullet::BulletPlugin, debug::DebugPlugin,
     enemy::EnemyPlugin, external::ExternalPlugin, gameover::GameOverPlugin, map::MapPlugin,
-    menus::MenuPlugin, minion::*, player::PlayerPlugin, prelude::*, spawner::SpawnerPlugin,
-    world_ui::BarMaterialPlugin,
+    menus::MenuPlugin, minion::*, particles::ParticlePlugin, player::PlayerPlugin, prelude::*,
+    spawner::SpawnerPlugin, world_ui::BarMaterialPlugin,
 };
 
 fn main() {
@@ -52,6 +53,7 @@ fn main() {
         .add_plugin(MinionPlugin)
         .add_plugin(WorldInspectorPlugin::new())
         .add_plugin(ExternalPlugin)
+        .add_plugin(ParticlePlugin)
         .add_plugin(SpawnerPlugin)
         .add_plugin(BarMaterialPlugin)
         .add_plugin(GameAudioPlugin)

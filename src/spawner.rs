@@ -1,5 +1,5 @@
 use crate::{
-    assets::ChickWalkFrames,
+    assets::{BuildingFrames, ChickWalkFrames, PuppyWalkFrames},
     minion::MinionBundle,
     prelude::*,
     world_ui::{spawn_quad, BarMaterial, Percentage},
@@ -32,6 +32,7 @@ pub fn spawn_initial_spawners(
     mut my_material_assets: ResMut<Assets<BarMaterial>>,
 
     map: Res<Assets<Map>>,
+    buildings: Res<BuildingFrames>,
 ) {
     let map = map.get(our_assets.map.clone()).unwrap();
 
@@ -52,18 +53,16 @@ pub fn spawn_initial_spawners(
 
     spawners.extend(spawn_minion_spawners(
         &mut commands,
-        &our_assets,
-        ChickenOrDog::Chicken,
         chicken_spawner_locations,
+        buildings.clone(),
         &mut mesh_assets,
         &mut my_material_assets,
     ));
 
     spawners.extend(spawn_minion_spawners(
         &mut commands,
-        &our_assets,
-        ChickenOrDog::Dog,
         dog_spawner_locations,
+        buildings.clone(),
         &mut mesh_assets,
         &mut my_material_assets,
     ));
@@ -81,30 +80,21 @@ pub fn spawn_initial_spawners(
 
 fn spawn_minion_spawners(
     commands: &mut Commands,
-    assets: &Res<OurAssets>,
-    minion_type: ChickenOrDog,
     spawn_locations: Vec<Vec2>,
+    buildings: BuildingFrames,
     mesh_assets: &mut ResMut<Assets<Mesh>>,
     my_material_assets: &mut ResMut<Assets<BarMaterial>>,
 ) -> Vec<Entity> {
-    let (color, texture) = match minion_type {
-        ChickenOrDog::Chicken => (Color::GREEN, assets.chicken_spawner.clone()),
-        ChickenOrDog::Dog => (Color::SALMON, assets.dog_spawner.clone()),
-    };
-
     let mut spawned = Vec::new();
 
     for spawn_location in spawn_locations {
         let ui = spawn_quad(commands, mesh_assets, my_material_assets);
+        let sprite = buildings.frames[1].clone();
         spawned.push(
             commands
-                .spawn_bundle(SpriteBundle {
-                    texture: texture.clone(),
-                    sprite: Sprite {
-                        color,
-                        custom_size: Some(Vec2::splat(0.25)),
-                        ..default()
-                    },
+                .spawn_bundle(SpriteSheetBundle {
+                    texture_atlas: buildings.texture.clone(),
+                    sprite,
                     transform: Transform::from_translation(Vec3::new(
                         spawn_location.x,
                         spawn_location.y,
@@ -134,6 +124,7 @@ fn minions_spawner_ai(
     assets: Res<OurAssets>,
     mut spawners_query: Query<(&mut Spawner, &GlobalTransform, &ChickenOrDog)>,
     chick_walk: Res<ChickWalkFrames>,
+    puppy_walk: Res<PuppyWalkFrames>,
     parent: Query<Entity, With<MinionParentTag>>,
     time: Res<Time>,
 ) {
@@ -154,12 +145,20 @@ fn minions_spawner_ai(
                     commands
                         .entity(ent)
                         .insert(chick_walk.texture.clone())
+                        .insert(DamageFlash {
+                            timer: Timer::from_seconds(0.0, false),
+                        })
                         .insert(chick_walk.frames[0].clone())
                         .insert(Animation {
                             current_frame: 0,
                             frames: chick_walk.frames.iter().map(|f| f.index).collect(),
+                            alt_frames: Some(
+                                chick_walk.alt_frames.iter().map(|f| f.index).collect(),
+                            ),
+                            playing_alt: false,
                             playing: true,
                             flip_x: false,
+                            flip_y: false,
                             timer: Timer::from_seconds(1.0 / 10.0, true),
                         });
                     spawned.push(ent);
@@ -171,6 +170,25 @@ fn minions_spawner_ai(
                         transform.translation.truncate(),
                     )
                     .unwrap();
+                    commands
+                        .entity(ent)
+                        .insert(puppy_walk.texture.clone())
+                        .insert(DamageFlash {
+                            timer: Timer::from_seconds(0.0, false),
+                        })
+                        .insert(puppy_walk.frames[0].clone())
+                        .insert(Animation {
+                            current_frame: 0,
+                            frames: puppy_walk.frames.iter().map(|f| f.index).collect(),
+                            alt_frames: Some(
+                                puppy_walk.alt_frames.iter().map(|f| f.index).collect(),
+                            ),
+                            playing_alt: false,
+                            playing: true,
+                            flip_x: false,
+                            flip_y: false,
+                            timer: Timer::from_seconds(1.0 / 10.0, true),
+                        });
                     spawned.push(ent);
                 }
             }
@@ -181,27 +199,45 @@ fn minions_spawner_ai(
 
 fn spawner_capture_ai(
     mut commands: Commands,
-    mut spawners: Query<(&Collisions, &mut Spawner, Entity, &Children)>,
+    mut spawners: Query<(
+        &Collisions,
+        &mut Spawner,
+        Entity,
+        &Children,
+        &mut TextureAtlasSprite,
+    )>,
     mut ui_query: Query<&mut Percentage>,
-    player: Query<&Player, Without<Minion>>,
-    enemy: Query<&Enemy, Without<Minion>>,
+    player: Query<(&Player, &RespawnTimer), Without<Minion>>,
+    enemy: Query<(&Enemy, &RespawnTimer), Without<Minion>>,
     minions: Query<&ChickenOrDog, (With<Minion>, Without<Spawner>)>,
     time: Res<Time>,
+    buildings: Res<BuildingFrames>,
 ) {
-    for (collisions, mut spawner, spawner_ent, spawner_children) in spawners.iter_mut() {
+    for (collisions, mut spawner, spawner_ent, spawner_children, mut sprite) in spawners.iter_mut()
+    {
         if collisions.is_empty() {
             continue;
         }
 
         let mut progress_multiplier = 0.0;
 
-        if collisions.entities().any(|ent| player.get(ent).is_ok()) {
-            progress_multiplier += 1.0;
-        }
+        collisions.entities().for_each(|ent| {
+            if let Ok((_, respawn)) = player.get(ent) {
+                if !respawn.is_dead {
+                    progress_multiplier += 1.0;
+                }
+            }
+        });
 
         progress_multiplier -= collisions
             .entities()
-            .filter(|ent| enemy.get(*ent).is_ok())
+            .filter(|ent| {
+                if let Ok((_, respawn)) = enemy.get(*ent) {
+                    !respawn.is_dead
+                } else {
+                    false
+                }
+            })
             .count() as f32;
 
         let minion_advantage: f32 = collisions
@@ -232,10 +268,22 @@ fn spawner_capture_ai(
             }
         }
 
-        if spawner.capture_progress <= -1.0 {
+        if spawner.capture_progress >= -0.5 && spawner.capture_progress <= -0.1 {
+            *sprite = buildings.frames[3].clone();
+        }
+        if spawner.capture_progress <= 0.5 && spawner.capture_progress >= 0.1 {
+            *sprite = buildings.frames[4].clone();
+        }
+
+        if spawner.capture_progress <= -0.9 {
+            *sprite = buildings.frames[0].clone();
             commands.entity(spawner_ent).insert(ChickenOrDog::Dog);
-        } else if spawner.capture_progress >= 1.0 {
+        } else if spawner.capture_progress >= 0.9 {
+            *sprite = buildings.frames[2].clone();
             commands.entity(spawner_ent).insert(ChickenOrDog::Chicken);
+        } else if spawner.capture_progress.abs() <= 0.15 {
+            *sprite = buildings.frames[1].clone();
+            commands.entity(spawner_ent).remove::<ChickenOrDog>();
         }
     }
 }

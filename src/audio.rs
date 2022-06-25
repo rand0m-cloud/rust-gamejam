@@ -3,10 +3,6 @@ use bevy_kira_audio::{AudioApp, AudioChannel, AudioPlugin};
 
 pub struct GameAudioPlugin;
 
-pub struct AudioState {
-    global_volume: f32,
-}
-
 struct Background;
 
 impl Plugin for GameAudioPlugin {
@@ -22,17 +18,15 @@ impl Plugin for GameAudioPlugin {
     }
 }
 
-fn create_audio_state(mut commands: Commands, bgm_channel: Res<AudioChannel<Background>>) {
+fn create_audio_state(bgm_channel: Res<AudioChannel<Background>>) {
     let global_volume = 0.5;
 
     bgm_channel.set_volume(global_volume);
-
-    commands.insert_resource(AudioState { global_volume });
 }
 
-fn update_volume(bgm_channel: Res<AudioChannel<Background>>, state: Res<AudioState>) {
-    if state.is_changed() {
-        bgm_channel.set_volume(state.global_volume);
+fn update_volume(bgm_channel: Res<AudioChannel<Background>>, volume: Res<f32>) {
+    if volume.is_changed() {
+        bgm_channel.set_volume(*volume);
     }
 }
 
@@ -40,5 +34,5 @@ fn play_background_music(
     background_channel: Res<AudioChannel<Background>>,
     assets: Res<OurAssets>,
 ) {
-    background_channel.play(assets.background_music.clone());
+    background_channel.play_looped(assets.background_music.clone());
 }
