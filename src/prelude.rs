@@ -43,6 +43,8 @@ pub enum Layer {
 pub struct Animation {
     pub current_frame: usize,
     pub frames: Vec<usize>,
+    pub alt_frames: Option<Vec<usize>>,
+    pub playing_alt: bool,
     pub playing: bool,
     pub flip_x: bool,
     pub timer: Timer,

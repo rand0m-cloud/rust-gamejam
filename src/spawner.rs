@@ -158,6 +158,10 @@ fn minions_spawner_ai(
                         .insert(Animation {
                             current_frame: 0,
                             frames: chick_walk.frames.iter().map(|f| f.index).collect(),
+                            alt_frames: Some(
+                                chick_walk.alt_frames.iter().map(|f| f.index).collect(),
+                            ),
+                            playing_alt: false,
                             playing: true,
                             flip_x: false,
                             timer: Timer::from_seconds(1.0 / 10.0, true),

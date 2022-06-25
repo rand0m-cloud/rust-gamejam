@@ -1,4 +1,4 @@
-use crate::prelude::*;
+use crate::{assets::DogWalkFrames, prelude::*};
 
 pub struct EnemyPlugin;
 impl Plugin for EnemyPlugin {
@@ -17,27 +17,28 @@ struct BulletParentTag;
 
 pub fn spawn_enemy(
     mut commands: Commands,
-    assets: Res<OurAssets>,
     map: Res<Assets<Map>>,
+    dog_walk: Res<DogWalkFrames>,
     our_assets: Res<OurAssets>,
 ) {
     let map = map.get(our_assets.map.clone()).unwrap();
     let size = 0.25;
 
     commands
-        .spawn_bundle(SpriteBundle {
-            texture: assets.placeholder.clone(),
-            sprite: Sprite {
-                color: Color::BLUE,
-                custom_size: Some(Vec2::splat(size)),
-                ..default()
-            },
-            transform: Transform::from_translation(Vec3::new(
-                map.enemy_spawn.x,
-                map.enemy_spawn.y,
-                500.0,
-            )),
+        .spawn_bundle(SpriteSheetBundle {
+            sprite: dog_walk.frames[0].clone(),
+            texture_atlas: dog_walk.texture.clone(),
+            transform: Transform::from_translation(map.enemy_spawn.extend(800.0)),
             ..default()
+        })
+        .insert(Animation {
+            current_frame: 0,
+            frames: dog_walk.frames.iter().map(|f| f.index).collect(),
+            alt_frames: Some(dog_walk.alt_frames.iter().map(|f| f.index).collect()),
+            playing_alt: false,
+            playing: true,
+            flip_x: true,
+            timer: Timer::from_seconds(2.0 / 10.0, true),
         })
         .insert(Enemy {
             bullet_cooldown: Timer::from_seconds(0.6, true),

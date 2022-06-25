@@ -32,7 +32,7 @@ fn camera_follow(
 
 fn player_shoot(
     mut commands: Commands,
-    mut player: Query<(&Transform, &mut Player)>,
+    mut player: Query<(&Transform, &mut Animation, &mut Player)>,
     parent: Query<Entity, With<BulletParentTag>>,
 
     keyboard: Res<Input<KeyCode>>,
@@ -42,7 +42,7 @@ fn player_shoot(
     assets: Res<OurAssets>,
 ) {
     let parent = parent.single();
-    let (transform, mut player) = player.single_mut();
+    let (transform, mut animation, mut player) = player.single_mut();
 
     if !player.bullet_cooldown.finished() {
         player.bullet_cooldown.tick(time.delta());
@@ -77,11 +77,21 @@ fn player_shoot(
         target_dir = target_dir.normalize();
 
         let mut transform = *transform;
-        transform.translation.z += 100.0;
+        transform.translation.z -= 10.0;
 
         let size = 0.1;
 
         player.bullet_cooldown.tick(time.delta());
+
+        animation.current_frame = 0;
+        animation.playing_alt = true;
+        if target_dir.x < 0.0 {
+            animation.flip_x = true;
+            transform.translation.x -= 0.08;
+        } else {
+            animation.flip_x = false;
+            transform.translation.x += 0.08;
+        }
 
         let bullet = commands
             .spawn_bundle(SpriteBundle {
@@ -140,20 +150,28 @@ fn player_movement(
     if keyboard.pressed(KeyCode::D) {
         transform.translation.x += time.delta_seconds() * stats.speed;
         animation.playing = true;
-        animation.flip_x = true;
+        if !animation.playing_alt {
+            animation.flip_x = true;
+        }
     }
     if keyboard.pressed(KeyCode::A) {
         transform.translation.x -= time.delta_seconds() * stats.speed;
         animation.playing = true;
-        animation.flip_x = false;
+        if !animation.playing_alt {
+            animation.flip_x = false;
+        }
     }
     if keyboard.pressed(KeyCode::W) {
         transform.translation.y += time.delta_seconds() * stats.speed;
-        animation.playing = true;
+        if !animation.playing_alt {
+            animation.playing = true;
+        }
     }
     if keyboard.pressed(KeyCode::S) {
         transform.translation.y -= time.delta_seconds() * stats.speed;
-        animation.playing = true;
+        if !animation.playing_alt {
+            animation.playing = true;
+        }
     }
 }
 
@@ -174,7 +192,7 @@ fn spawn_player(
             ..default()
         })
         .insert(Player {
-            bullet_cooldown: Timer::from_seconds(0.3, true),
+            bullet_cooldown: Timer::from_seconds(0.35, true),
         })
         .insert(MovementStats { speed: 0.5 })
         .insert(RigidBody::Dynamic)
@@ -184,6 +202,8 @@ fn spawn_player(
         .insert(Animation {
             current_frame: 0,
             frames: chicken_walk.frames.iter().map(|f| f.index).collect(),
+            alt_frames: Some(chicken_walk.alt_frames.iter().map(|f| f.index).collect()),
+            playing_alt: false,
             playing: false,
             flip_x: false,
             timer: Timer::from_seconds(1.0 / 10.0, true),

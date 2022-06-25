@@ -1,10 +1,10 @@
 //Explicit paths because kayak uses all the same names
 use bevy::{
     core::Name,
-    prelude::{default, AssetServer, Commands, Plugin, Res, ResMut, State, SystemSet},
+    prelude::{default, AssetServer, Commands, Handle, Plugin, Res, ResMut, State, SystemSet},
 };
 use kayak_ui::{
-    bevy::{BevyContext, BevyKayakUIPlugin, FontMapping, UICameraBundle},
+    bevy::{BevyContext, BevyKayakUIPlugin, FontMapping, ImageManager, UICameraBundle},
     core::{
         render, rsx,
         styles::{Corner, Edge, LayoutType, Style, StyleProp, Units},
@@ -42,7 +42,23 @@ fn setup_kayak(
     font_mapping.set_default(asset_server.load("roboto.kayak_font"));
 }
 
-fn spawn_main_menu(mut commands: Commands) {
+fn spawn_main_menu(
+    mut commands: Commands,
+    assets: Res<AssetServer>,
+    mut image_manager: ResMut<ImageManager>,
+) {
+    let ooga_booga_text_doesnt_render_in_wasm: Handle<bevy::render::texture::Image> =
+        assets.load("text_workaround.png");
+    let image_handle = image_manager.get(&ooga_booga_text_doesnt_render_in_wasm);
+
+    let ooga_booga_text_doesnt_render_in_wasm: Handle<bevy::render::texture::Image> =
+        assets.load("volume_workaround.png");
+    let volume_handle = image_manager.get(&ooga_booga_text_doesnt_render_in_wasm);
+
+    let ooga_booga_text_doesnt_render_in_wasm: Handle<bevy::render::texture::Image> =
+        assets.load("button_workaround.png");
+    let button_handle = image_manager.get(&ooga_booga_text_doesnt_render_in_wasm);
+
     let context = BevyContext::new(|context| {
         let container_style = Style {
             layout_type: StyleProp::Value(LayoutType::Column),
@@ -61,7 +77,7 @@ fn spawn_main_menu(mut commands: Commands) {
             ..default()
         };
 
-        let title_style = Style {
+        let _title_style = Style {
             bottom: StyleProp::Value(Units::Stretch(1.0)),
             ..default()
         };
@@ -98,23 +114,47 @@ fn spawn_main_menu(mut commands: Commands) {
             ..default()
         };
 
+        //Sizes could be loaded from image desc but that's hell
+        let image_title_style = Style {
+            top: StyleProp::Value(Units::Pixels(10.0)),
+            width: StyleProp::Value(Units::Pixels(459.0)),
+            height: StyleProp::Value(Units::Pixels(231.0)),
+            ..default()
+        };
+
+        let image_button_style = Style {
+            width: StyleProp::Value(Units::Pixels(73.0)),
+            height: StyleProp::Value(Units::Pixels(25.0)),
+            ..default()
+        };
+
+        let image_volume_style = Style {
+            width: StyleProp::Value(Units::Pixels(113.0)),
+            height: StyleProp::Value(Units::Pixels(32.0)),
+            ..default()
+        };
+
         let box_color = Color::WHITE;
         let button_color = Color::new(0.9, 0.1, 0.1, 1.0);
 
         render! {
             <widgets::App>
                 <widgets::Background styles={Some(container_style)}>
-                    <widgets::Text content={"Video Game Title".to_string()} size={32.0} styles={Some(title_style)}/>
-                    <widgets::Text content={"Game By: rand0m-cloud & LogicProjects".to_string()} size={24.0} styles={Some(title_style)}/>
-                    <widgets::Text content={"Made with Bevy!".to_string()} size={24.0} styles={Some(title_style)}/>
+                    //<widgets::Text content={"Video Game Title".to_string()} size={32.0} styles={Some(title_style)}/>
+                    //<widgets::Text content={"Game By: rand0m-cloud & LogicProjects".to_string()} size={24.0} />
+                    //<widgets::Text content={"Art By: Madeline Hunt".to_string()} size={24.0} styles={Some(title_style)}/>
+                    //<widgets::Text content={"Made with Bevy!".to_string()} size={24.0} styles={Some(title_style)}/>
+                    <widgets::Image handle={image_handle} styles={Some(image_title_style)}/>
                     <widgets::Button styles={Some(button_style)} on_event={Some(start_button)}>
-                        <widgets::Text content={"Start".to_string()} size={24.0} />
+                        //<widgets::Text content={"Start".to_string()} size={24.0} />
+                    <widgets::Image handle={button_handle} styles={Some(image_button_style)}/>
                     </widgets::Button>
                     //<widgets::Button styles={Some(button_style)}>
                         //<widgets::Text content={"Options".to_string()} size={24.0} />
                     //</widgets::Button>
                     <widgets::Element styles={Some(element_style)}>
-                        <widgets::Text content={"Volume: ".to_string()} size={24.0} />
+                        //<widgets::Text content={"Volume: ".to_string()} size={24.0} />
+                    <widgets::Image handle={volume_handle} styles={Some(image_volume_style)}/>
                     <SliderBox size={(200.0, 30.0)} box_color={box_color} button_color={button_color}/>
                     </widgets::Element>
                 </widgets::Background>
