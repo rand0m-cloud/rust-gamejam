@@ -53,8 +53,6 @@ pub fn spawn_initial_spawners(
 
     spawners.extend(spawn_minion_spawners(
         &mut commands,
-        &our_assets,
-        ChickenOrDog::Chicken,
         chicken_spawner_locations,
         buildings.clone(),
         &mut mesh_assets,
@@ -63,8 +61,6 @@ pub fn spawn_initial_spawners(
 
     spawners.extend(spawn_minion_spawners(
         &mut commands,
-        &our_assets,
-        ChickenOrDog::Dog,
         dog_spawner_locations,
         buildings.clone(),
         &mut mesh_assets,
@@ -84,8 +80,6 @@ pub fn spawn_initial_spawners(
 
 fn spawn_minion_spawners(
     commands: &mut Commands,
-    assets: &Res<OurAssets>,
-    minion_type: ChickenOrDog,
     spawn_locations: Vec<Vec2>,
     buildings: BuildingFrames,
     mesh_assets: &mut ResMut<Assets<Mesh>>,
