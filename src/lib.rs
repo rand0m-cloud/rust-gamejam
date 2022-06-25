@@ -20,6 +20,7 @@ pub mod world_ui;
 pub enum GameState {
     Splash,
     MainMenu,
+    Tutorial,
     GamePlay,
     GameOver { won: bool },
 }
