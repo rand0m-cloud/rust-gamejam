@@ -89,7 +89,7 @@ pub struct OurAssets {
     #[asset(path = "awesome.png")]
     pub chicken_spawner: Handle<Image>,
 
-    #[asset(path = "background.png")]
+    #[asset(path = "Background.png")]
     pub background: Handle<Image>,
 
     #[asset(path = "main.map")]

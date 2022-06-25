@@ -201,11 +201,21 @@ fn enemy_shoot(
             let mut transform = *transform;
             transform.translation.z += 1.0;
 
+            if target_dir.x < 0.0 {
+                animation.flip_x = true;
+                transform.translation.x -= 0.08;
+            } else {
+                animation.flip_x = false;
+                transform.translation.x += 0.08;
+            }
+
             let size = 0.1;
 
             let num = rand::thread_rng().gen_range(0..2);
             let sprite = bullets.frames[num + 2].clone();
             //sprite.custom_size = Some(Vec2::splat(size));
+            animation.current_frame = 0;
+            animation.playing_alt = true;
 
             let bullet = commands
                 .spawn_bundle(SpriteSheetBundle {
