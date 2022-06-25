@@ -274,7 +274,7 @@ fn spawner_capture_ai(
             }
         }
 
-        if spawner.capture_progress <= -0.5 && spawner.capture_progress >= -0.1 {
+        if spawner.capture_progress >= -0.5 && spawner.capture_progress <= -0.1 {
             *sprite = buildings.frames[3].clone();
         }
         if spawner.capture_progress <= 0.5 && spawner.capture_progress >= 0.1 {
