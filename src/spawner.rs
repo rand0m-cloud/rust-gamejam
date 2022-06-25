@@ -1,5 +1,5 @@
 use crate::{
-    assets::ChickWalkFrames,
+    assets::{ChickWalkFrames, PuppyWalkFrames},
     minion::MinionBundle,
     prelude::*,
     world_ui::{spawn_quad, BarMaterial, Percentage},
@@ -134,6 +134,7 @@ fn minions_spawner_ai(
     assets: Res<OurAssets>,
     mut spawners_query: Query<(&mut Spawner, &GlobalTransform, &ChickenOrDog)>,
     chick_walk: Res<ChickWalkFrames>,
+    puppy_walk: Res<PuppyWalkFrames>,
     parent: Query<Entity, With<MinionParentTag>>,
     time: Res<Time>,
 ) {
@@ -158,8 +159,13 @@ fn minions_spawner_ai(
                         .insert(Animation {
                             current_frame: 0,
                             frames: chick_walk.frames.iter().map(|f| f.index).collect(),
+                            alt_frames: Some(
+                                chick_walk.alt_frames.iter().map(|f| f.index).collect(),
+                            ),
+                            playing_alt: false,
                             playing: true,
                             flip_x: false,
+                            flip_y: false,
                             timer: Timer::from_seconds(1.0 / 10.0, true),
                         });
                     spawned.push(ent);
@@ -171,6 +177,22 @@ fn minions_spawner_ai(
                         transform.translation.truncate(),
                     )
                     .unwrap();
+                    commands
+                        .entity(ent)
+                        .insert(puppy_walk.texture.clone())
+                        .insert(puppy_walk.frames[0].clone())
+                        .insert(Animation {
+                            current_frame: 0,
+                            frames: puppy_walk.frames.iter().map(|f| f.index).collect(),
+                            alt_frames: Some(
+                                puppy_walk.alt_frames.iter().map(|f| f.index).collect(),
+                            ),
+                            playing_alt: false,
+                            playing: true,
+                            flip_x: false,
+                            flip_y: false,
+                            timer: Timer::from_seconds(1.0 / 10.0, true),
+                        });
                     spawned.push(ent);
                 }
             }
@@ -183,8 +205,8 @@ fn spawner_capture_ai(
     mut commands: Commands,
     mut spawners: Query<(&Collisions, &mut Spawner, Entity, &Children)>,
     mut ui_query: Query<&mut Percentage>,
-    player: Query<&Player, Without<Minion>>,
-    enemy: Query<&Enemy, Without<Minion>>,
+    player: Query<(&Player, &RespawnTimer), Without<Minion>>,
+    enemy: Query<(&Enemy, &RespawnTimer), Without<Minion>>,
     minions: Query<&ChickenOrDog, (With<Minion>, Without<Spawner>)>,
     time: Res<Time>,
 ) {
@@ -195,13 +217,23 @@ fn spawner_capture_ai(
 
         let mut progress_multiplier = 0.0;
 
-        if collisions.entities().any(|ent| player.get(ent).is_ok()) {
-            progress_multiplier += 1.0;
-        }
+        collisions.entities().for_each(|ent| {
+            if let Ok((_, respawn)) = player.get(ent) {
+                if !respawn.is_dead {
+                    progress_multiplier += 1.0;
+                }
+            }
+        });
 
         progress_multiplier -= collisions
             .entities()
-            .filter(|ent| enemy.get(*ent).is_ok())
+            .filter(|ent| {
+                if let Ok((_, respawn)) = enemy.get(*ent) {
+                    !respawn.is_dead
+                } else {
+                    false
+                }
+            })
             .count() as f32;
 
         let minion_advantage: f32 = collisions
