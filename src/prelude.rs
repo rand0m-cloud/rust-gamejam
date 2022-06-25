@@ -19,6 +19,7 @@ pub struct Player {
 
 #[derive(Component)]
 pub struct Enemy {
+    pub range: f32,
     pub bullet_cooldown: Timer,
 }
 

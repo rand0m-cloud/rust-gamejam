@@ -1,3 +1,5 @@
+use heron::rapier_plugin::PhysicsWorld;
+
 use crate::{assets::DogWalkFrames, prelude::*};
 
 pub struct EnemyPlugin;
@@ -41,6 +43,7 @@ pub fn spawn_enemy(
             timer: Timer::from_seconds(2.0 / 10.0, true),
         })
         .insert(Enemy {
+            range: 2.5,
             bullet_cooldown: Timer::from_seconds(0.6, true),
         })
         .insert(Health(PLAYER_HP))
@@ -65,7 +68,7 @@ fn enemy_ai(
         Or<(With<Spawner>, With<Player>, With<Enemy>)>,
     >,
     player_query: Query<&GlobalTransform, With<Player>>,
-
+    physics_world: PhysicsWorld,
     time: Res<Time>,
 ) {
     for (global_transform, mut transform, movement_stats) in minion_query.iter_mut() {
@@ -77,6 +80,19 @@ fn enemy_ai(
                 None => Some(*transform),
                 Some(ChickenOrDog::Chicken) => Some(*transform),
                 _ => None,
+            })
+            .filter(|transform| {
+                physics_world
+                    .ray_cast_with_filter(
+                        position.extend(0.0),
+                        transform.translation - position.extend(0.0),
+                        false,
+                        CollisionLayers::none()
+                            .with_group(Layer::Wall)
+                            .with_mask(Layer::Wall),
+                        |_ent| true,
+                    )
+                    .is_none()
             });
 
         let target_position = {
@@ -97,7 +113,7 @@ fn enemy_shoot(
     mut commands: Commands,
     mut enemies: Query<(&mut Enemy, &GlobalTransform, &Transform)>,
     targets: Query<(&GlobalTransform, &ChickenOrDog), Or<(With<Player>, With<Minion>)>>,
-
+    physics_world: PhysicsWorld,
     parent: Query<Entity, With<BulletParentTag>>,
     time: Res<Time>,
 
@@ -123,11 +139,29 @@ fn enemy_shoot(
                     None
                 }
             })
+            .filter(|transform| {
+                physics_world
+                    .ray_cast_with_filter(
+                        position.extend(0.0),
+                        transform.translation - position.extend(0.0),
+                        false,
+                        CollisionLayers::none()
+                            .with_group(Layer::Wall)
+                            .with_mask(Layer::Wall),
+                        |_ent| true,
+                    )
+                    .is_none()
+            })
             .cloned();
 
         enemy.bullet_cooldown.tick(time.delta());
 
         if let Some(target) = find_closest(position, enemy_targets) {
+            let target_dist = Vec2::distance(target, position);
+            if target_dist > enemy.range {
+                return;
+            }
+
             let target_dir = (target - position).normalize();
 
             let mut transform = *transform;

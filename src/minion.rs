@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use heron::rapier_plugin::PhysicsWorld;
 use serde::{Deserialize, Serialize};
 
 pub struct MinionPlugin;
@@ -147,7 +148,7 @@ pub fn minions_ai(
         Or<(With<Spawner>, With<Player>, With<Enemy>)>,
     >,
     player_query: Query<&GlobalTransform, With<Player>>,
-
+    physics_world: PhysicsWorld,
     time: Res<Time>,
 ) {
     for (minion_type, global_transform, mut transform, movement_stats) in minion_query.iter_mut() {
@@ -159,6 +160,19 @@ pub fn minions_ai(
                 None => Some(*transform),
                 Some(ty) if ty != minion_type => Some(*transform),
                 _ => None,
+            })
+            .filter(|transform| {
+                physics_world
+                    .ray_cast_with_filter(
+                        position.extend(0.0),
+                        transform.translation - position.extend(0.0),
+                        false,
+                        CollisionLayers::none()
+                            .with_group(Layer::Wall)
+                            .with_mask(Layer::Wall),
+                        |_ent| true,
+                    )
+                    .is_none()
             });
 
         let target_position = {
