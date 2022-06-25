@@ -1,6 +1,8 @@
 #![allow(clippy::type_complexity)]
 #![allow(clippy::too_many_arguments)]
 
+pub const SCALE: f32 = 2.0 / 3.0;
+
 pub mod assets;
 pub mod audio;
 pub mod bullet;

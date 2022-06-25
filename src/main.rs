@@ -7,14 +7,14 @@ use bevy_inspector_egui::{WorldInspectorParams, WorldInspectorPlugin};
 use bevy_tweening::TweeningPlugin;
 
 pub const CLEAR: Color = Color::rgb(0.3, 0.3, 0.3);
-pub const HEIGHT: f32 = 900.0;
+pub const HEIGHT: f32 = 900.0 * SCALE;
 pub const RESOLUTION: f32 = 16.0 / 9.0;
 
 use rust_gamejam::{
     assets::GameAssetsPlugin, audio::GameAudioPlugin, bullet::BulletPlugin, debug::DebugPlugin,
     enemy::EnemyPlugin, external::ExternalPlugin, gameover::GameOverPlugin, map::MapPlugin,
     menus::MenuPlugin, minion::*, particles::ParticlePlugin, player::PlayerPlugin, prelude::*,
-    spawner::SpawnerPlugin, world_ui::BarMaterialPlugin,
+    spawner::SpawnerPlugin, world_ui::BarMaterialPlugin, SCALE,
 };
 
 fn main() {
