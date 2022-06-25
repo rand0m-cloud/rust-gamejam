@@ -209,7 +209,12 @@ fn minion_death(minions: Query<(Entity, &Health), With<Minion>>, mut commands: C
 fn minions_attack(
     mut minions: Query<(&mut Minion, &GlobalTransform, &ChickenOrDog, &mut Animation)>,
     mut targets: Query<
-        (&GlobalTransform, &ChickenOrDog, &mut Health),
+        (
+            &GlobalTransform,
+            &ChickenOrDog,
+            &mut Health,
+            Option<&mut DamageFlash>,
+        ),
         Or<(With<Player>, With<Minion>, With<Enemy>)>,
     >,
 
@@ -227,25 +232,29 @@ fn minions_attack(
 
         let enemy_target = targets
             .iter_mut()
-            .filter_map(|(target_transform, enemy_team, health)| {
+            .filter_map(|(target_transform, enemy_team, health, damage_flash)| {
                 let distance = (target_transform.translation.truncate() - position).length();
                 if team != enemy_team && distance <= MINION_MELEE_RANGE {
                     animation.flip_x = target_transform.translation.x - position.x > 0.0;
                     if team == &ChickenOrDog::Dog {
                         animation.flip_x = !animation.flip_x;
                     }
-                    Some(health)
+                    Some((health, damage_flash))
                 } else {
                     None
                 }
             })
             .next();
 
-        if let Some(mut enemy_hp) = enemy_target {
+        if let Some((mut enemy_hp, enemy_flash)) = enemy_target {
             minion.attack_cooldown.tick(time.delta());
             animation.playing_alt = true;
             animation.current_frame = 0;
             enemy_hp.0 -= MINION_MELEE_DMG;
+
+            if let Some(mut damage_flash) = enemy_flash {
+                damage_flash.timer = Timer::from_seconds(0.1, true);
+            }
         }
     }
 }
