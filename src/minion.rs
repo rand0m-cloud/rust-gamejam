@@ -4,9 +4,13 @@ use serde::{Deserialize, Serialize};
 pub struct MinionPlugin;
 impl Plugin for MinionPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system_set(SystemSet::on_update(GameState::GamePlay).with_system(minions_ai))
-            .add_system(minion_death)
-            .register_type::<Spawner>();
+        app.add_system_set(
+            SystemSet::on_update(GameState::GamePlay)
+                .with_system(minions_ai)
+                .with_system(minions_attack),
+        )
+        .add_system(minion_death)
+        .register_type::<Spawner>();
     }
 }
 
@@ -67,7 +71,9 @@ impl MinionBundle {
                     speed: config.speed,
                 },
                 minion_type: ChickenOrDog::Dog,
-                minion: Minion,
+                minion: Minion {
+                    attack_cooldown: Timer::from_seconds(MINION_MELEE_COOLDOWN, true),
+                },
                 hp: Health(config.hp),
                 rigid_body: RigidBody::Dynamic,
                 collision_shape: CollisionShape::Sphere { radius: size / 2.0 },
@@ -108,7 +114,9 @@ impl MinionBundle {
                     speed: config.speed,
                 },
                 minion_type: ChickenOrDog::Chicken,
-                minion: Minion,
+                minion: Minion {
+                    attack_cooldown: Timer::from_seconds(MINION_MELEE_COOLDOWN, true),
+                },
                 hp: Health(config.hp),
                 rigid_body: RigidBody::Dynamic,
                 collision_shape: CollisionShape::Sphere { radius: size / 2.0 },
@@ -171,6 +179,44 @@ fn minion_death(minions: Query<(Entity, &Health), With<Minion>>, mut commands: C
     for (ent, health) in minions.iter() {
         if health.0 <= 0.0 {
             commands.entity(ent).despawn_recursive();
+        }
+    }
+}
+
+fn minions_attack(
+    mut minions: Query<(&mut Minion, &GlobalTransform, &ChickenOrDog)>,
+    mut targets: Query<
+        (&GlobalTransform, &ChickenOrDog, &mut Health),
+        Or<(With<Player>, With<Minion>, With<Enemy>)>,
+    >,
+
+    time: Res<Time>,
+) {
+    let delta = time.delta();
+
+    for (mut minion, global_transform, team) in minions.iter_mut() {
+        if !minion.attack_cooldown.finished() {
+            minion.attack_cooldown.tick(delta);
+            continue;
+        }
+
+        let position = global_transform.translation.truncate();
+
+        let enemy_target = targets
+            .iter_mut()
+            .filter_map(|(target_transform, enemy_team, health)| {
+                let distance = (target_transform.translation.truncate() - position).length();
+                if team != enemy_team && distance <= MINION_MELEE_RANGE {
+                    Some(health)
+                } else {
+                    None
+                }
+            })
+            .next();
+
+        if let Some(mut enemy_hp) = enemy_target {
+            minion.attack_cooldown.tick(time.delta());
+            enemy_hp.0 -= MINION_MELEE_DMG;
         }
     }
 }

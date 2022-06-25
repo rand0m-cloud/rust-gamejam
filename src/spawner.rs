@@ -112,7 +112,6 @@ fn spawn_minion_spawners(
                     )),
                     ..default()
                 })
-                .insert(Minion)
                 .insert(Spawner::default())
                 .insert(RigidBody::Sensor)
                 .insert(CollisionShape::Sphere { radius: 0.2 })
@@ -133,7 +132,7 @@ fn spawn_minion_spawners(
 fn minions_spawner_ai(
     mut commands: Commands,
     assets: Res<OurAssets>,
-    mut spawners_query: Query<(&mut Spawner, &GlobalTransform, &ChickenOrDog), With<Minion>>,
+    mut spawners_query: Query<(&mut Spawner, &GlobalTransform, &ChickenOrDog)>,
     chick_walk: Res<ChickWalkFrames>,
     parent: Query<Entity, With<MinionParentTag>>,
     time: Res<Time>,

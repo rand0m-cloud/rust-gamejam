@@ -8,6 +8,9 @@ use serde::{Deserialize, Serialize};
 pub use crate::{assets::OurAssets, map::Map, GameState};
 
 pub const PLAYER_HP: f32 = 10.0;
+pub const MINION_MELEE_DMG: f32 = 0.5;
+pub const MINION_MELEE_COOLDOWN: f32 = 0.75;
+pub const MINION_MELEE_RANGE: f32 = 0.3;
 
 #[derive(Component)]
 pub struct Player {
@@ -63,7 +66,9 @@ pub struct RectCollider;
 pub struct CircleCollider;
 
 #[derive(Component)]
-pub struct Minion;
+pub struct Minion {
+    pub attack_cooldown: Timer,
+}
 
 #[derive(Copy, Clone, Debug, Component, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ChickenOrDog {
