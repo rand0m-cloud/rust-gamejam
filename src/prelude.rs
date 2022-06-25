@@ -7,15 +7,23 @@ use serde::{Deserialize, Serialize};
 
 pub use crate::{assets::OurAssets, map::Map, GameState};
 
+pub const PLAYER_HP: f32 = 10.0;
+pub const MINION_MELEE_DMG: f32 = 0.5;
+pub const MINION_MELEE_COOLDOWN: f32 = 0.75;
+pub const MINION_MELEE_RANGE: f32 = 0.3;
+
 #[derive(Component)]
 pub struct Player {
     pub bullet_cooldown: Timer,
 }
 
 #[derive(Component)]
-pub struct Enemy;
+pub struct Enemy {
+    pub bullet_cooldown: Timer,
+}
 
-#[derive(Component, Debug)]
+#[derive(Component, Debug, Reflect, Default)]
+#[reflect(Component)]
 pub struct Health(pub f32);
 
 #[derive(PhysicsLayer, Copy, Clone)]
@@ -58,7 +66,9 @@ pub struct RectCollider;
 pub struct CircleCollider;
 
 #[derive(Component)]
-pub struct Minion;
+pub struct Minion {
+    pub attack_cooldown: Timer,
+}
 
 #[derive(Copy, Clone, Debug, Component, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ChickenOrDog {
@@ -115,4 +125,24 @@ pub fn is_layer_collision(event: &CollisionEvent, layer: Layer) -> Option<(Entit
         Some(1) => Some((entities.1, entities.0)),
         _ => None,
     }
+}
+
+pub fn find_closest(position: Vec2, iter: impl Iterator<Item = GlobalTransform>) -> Option<Vec2> {
+    iter.min_by(|transform, other_transform| {
+        (position - transform.translation.truncate())
+            .length()
+            .partial_cmp(&(position - other_transform.translation.truncate()).length())
+            .unwrap()
+    })
+    .map(|transform| transform.translation.truncate())
+}
+
+pub fn find_farthest(position: Vec2, iter: impl Iterator<Item = GlobalTransform>) -> Option<Vec2> {
+    iter.max_by(|transform, other_transform| {
+        (position - transform.translation.truncate())
+            .length()
+            .partial_cmp(&(position - other_transform.translation.truncate()).length())
+            .unwrap()
+    })
+    .map(|transform| transform.translation.truncate())
 }

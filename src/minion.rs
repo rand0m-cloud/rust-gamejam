@@ -4,8 +4,13 @@ use serde::{Deserialize, Serialize};
 pub struct MinionPlugin;
 impl Plugin for MinionPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system_set(SystemSet::on_update(GameState::GamePlay).with_system(minions_ai))
-            .register_type::<Spawner>();
+        app.add_system_set(
+            SystemSet::on_update(GameState::GamePlay)
+                .with_system(minions_ai)
+                .with_system(minions_attack),
+        )
+        .add_system(minion_death)
+        .register_type::<Spawner>();
     }
 }
 
@@ -58,7 +63,7 @@ impl MinionBundle {
                     transform: Transform::from_translation(Vec3::new(
                         spawn_location.x,
                         spawn_location.y,
-                        1.0,
+                        100.0,
                     )),
                     ..default()
                 },
@@ -66,7 +71,9 @@ impl MinionBundle {
                     speed: config.speed,
                 },
                 minion_type: ChickenOrDog::Dog,
-                minion: Minion,
+                minion: Minion {
+                    attack_cooldown: Timer::from_seconds(MINION_MELEE_COOLDOWN, true),
+                },
                 hp: Health(config.hp),
                 rigid_body: RigidBody::Dynamic,
                 collision_shape: CollisionShape::Sphere { radius: size / 2.0 },
@@ -99,7 +106,7 @@ impl MinionBundle {
                     transform: Transform::from_translation(Vec3::new(
                         spawn_location.x,
                         spawn_location.y,
-                        1.0,
+                        100.0,
                     )),
                     ..default()
                 },
@@ -107,12 +114,14 @@ impl MinionBundle {
                     speed: config.speed,
                 },
                 minion_type: ChickenOrDog::Chicken,
-                minion: Minion,
+                minion: Minion {
+                    attack_cooldown: Timer::from_seconds(MINION_MELEE_COOLDOWN, true),
+                },
                 hp: Health(config.hp),
                 rigid_body: RigidBody::Dynamic,
                 collision_shape: CollisionShape::Sphere { radius: size / 2.0 },
                 rotation_constraints: RotationConstraints::lock(),
-                collision_layer: CollisionLayers::all_masks::<Layer>().with_group(Layer::Enemy),
+                collision_layer: CollisionLayers::all_masks::<Layer>().with_group(Layer::Player),
             })
             .insert(Name::new("Chick"))
             .id();
@@ -141,16 +150,6 @@ pub fn minions_ai(
 
     time: Res<Time>,
 ) {
-    fn find_closest(position: Vec2, iter: impl Iterator<Item = GlobalTransform>) -> Option<Vec2> {
-        iter.min_by(|transform, other_transform| {
-            (position - transform.translation.truncate())
-                .length()
-                .partial_cmp(&(position - other_transform.translation.truncate()).length())
-                .unwrap()
-        })
-        .map(|transform| transform.translation.truncate())
-    }
-
     for (minion_type, global_transform, mut transform, movement_stats) in minion_query.iter_mut() {
         let position = global_transform.translation.truncate();
 
@@ -173,5 +172,51 @@ pub fn minions_ai(
         let dir = target_position - position;
         let dir = dir.try_normalize().unwrap_or_default().extend(0.0);
         transform.translation += dir * movement_stats.speed * time.delta_seconds();
+    }
+}
+
+fn minion_death(minions: Query<(Entity, &Health), With<Minion>>, mut commands: Commands) {
+    for (ent, health) in minions.iter() {
+        if health.0 <= 0.0 {
+            commands.entity(ent).despawn_recursive();
+        }
+    }
+}
+
+fn minions_attack(
+    mut minions: Query<(&mut Minion, &GlobalTransform, &ChickenOrDog)>,
+    mut targets: Query<
+        (&GlobalTransform, &ChickenOrDog, &mut Health),
+        Or<(With<Player>, With<Minion>, With<Enemy>)>,
+    >,
+
+    time: Res<Time>,
+) {
+    let delta = time.delta();
+
+    for (mut minion, global_transform, team) in minions.iter_mut() {
+        if !minion.attack_cooldown.finished() {
+            minion.attack_cooldown.tick(delta);
+            continue;
+        }
+
+        let position = global_transform.translation.truncate();
+
+        let enemy_target = targets
+            .iter_mut()
+            .filter_map(|(target_transform, enemy_team, health)| {
+                let distance = (target_transform.translation.truncate() - position).length();
+                if team != enemy_team && distance <= MINION_MELEE_RANGE {
+                    Some(health)
+                } else {
+                    None
+                }
+            })
+            .next();
+
+        if let Some(mut enemy_hp) = enemy_target {
+            minion.attack_cooldown.tick(time.delta());
+            enemy_hp.0 -= MINION_MELEE_DMG;
+        }
     }
 }

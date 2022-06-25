@@ -14,7 +14,8 @@ impl Plugin for PlayerPlugin {
                 SystemSet::on_update(GameState::GamePlay)
                     .with_system(player_movement)
                     .with_system(camera_follow.after(player_movement))
-                    .with_system(player_shoot),
+                    .with_system(player_shoot)
+                    .with_system(player_death),
             );
     }
 }
@@ -76,7 +77,7 @@ fn player_shoot(
         target_dir = target_dir.normalize();
 
         let mut transform = *transform;
-        transform.translation.z += 1.0;
+        transform.translation.z += 100.0;
 
         let size = 0.1;
 
@@ -169,7 +170,7 @@ fn spawn_player(
         .spawn_bundle(SpriteSheetBundle {
             sprite: chicken_walk.frames[0].clone(),
             texture_atlas: chicken_walk.texture.clone(),
-            transform: Transform::from_translation(map.player_spawn.extend(0.0)),
+            transform: Transform::from_translation(map.player_spawn.extend(800.0)),
             ..default()
         })
         .insert(Player {
@@ -179,11 +180,7 @@ fn spawn_player(
         .insert(RigidBody::Dynamic)
         .insert(CollisionShape::Sphere { radius: size / 2.0 })
         .insert(RotationConstraints::lock())
-        .insert(
-            CollisionLayers::all_masks::<Layer>()
-                .with_group(Layer::Player)
-                .without_mask(Layer::Bullet),
-        )
+        .insert(CollisionLayers::all_masks::<Layer>().with_group(Layer::Player))
         .insert(Animation {
             current_frame: 0,
             frames: chicken_walk.frames.iter().map(|f| f.index).collect(),
@@ -192,10 +189,53 @@ fn spawn_player(
             timer: Timer::from_seconds(1.0 / 10.0, true),
         })
         .insert(Name::new("Player"))
-        .insert(ChickenOrDog::Chicken);
+        .insert(ChickenOrDog::Chicken)
+        .insert(Health(PLAYER_HP));
 
     commands
         .spawn_bundle(TransformBundle::default())
         .insert(BulletParentTag)
         .insert(Name::new("Bullets"));
+}
+
+fn player_death(
+    mut players: Query<
+        (&mut Transform, &mut Health, &ChickenOrDog),
+        Or<(With<Player>, With<Enemy>)>,
+    >,
+    spawners: Query<(&GlobalTransform, &ChickenOrDog), With<Spawner>>,
+
+    map: Res<Assets<Map>>,
+    our_assets: Res<OurAssets>,
+) {
+    for (mut transform, mut health, team) in players.iter_mut() {
+        if health.0 <= 0.0 {
+            health.0 = PLAYER_HP;
+
+            let friendly_spawners = spawners
+                .iter()
+                .filter_map(|(transform, spawner_team)| {
+                    if team == spawner_team {
+                        Some(transform)
+                    } else {
+                        None
+                    }
+                })
+                .cloned();
+
+            let respawn_location =
+                find_farthest(transform.translation.truncate(), friendly_spawners).unwrap_or_else(
+                    || {
+                        let map = map.get(our_assets.map.clone()).unwrap();
+                        match team {
+                            ChickenOrDog::Chicken => map.player_spawn,
+                            ChickenOrDog::Dog => map.enemy_spawn,
+                        }
+                    },
+                );
+
+            let z = transform.translation.z;
+            transform.translation = respawn_location.extend(z);
+        }
+    }
 }

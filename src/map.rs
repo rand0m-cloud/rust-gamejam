@@ -42,10 +42,12 @@ fn create_map(map_assets: Res<Assets<Map>>, our_assets: Res<OurAssets>, mut comm
                 .spawn_bundle(SpriteBundle {
                     sprite: Sprite {
                         custom_size: Some(rect.size),
+                        //Don't render walls anymore :)
+                        color: Color::NONE,
                         ..default()
                     },
                     transform: Transform {
-                        translation: rect.position.extend(0.0),
+                        translation: rect.position.extend(10.0),
                         //rotation: Quat::from_axis_angle(Vec3::Z, rect.rotation),
                         rotation: Quat::from_euler(EulerRot::XYZ, 0.0, 0.0, rect.rotation),
                         ..Default::default()
@@ -64,7 +66,10 @@ fn create_map(map_assets: Res<Assets<Map>>, our_assets: Res<OurAssets>, mut comm
         );
     }
     commands
-        .spawn_bundle(TransformBundle::default())
+        .spawn_bundle(TransformBundle {
+            local: Transform::from_xyz(0.0, 0.0, 10.0),
+            ..default()
+        })
         .push_children(&walls)
         .insert(Name::new("Map"));
 }

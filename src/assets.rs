@@ -56,8 +56,14 @@ pub struct OurAssets {
     #[asset(path = "awesome.png")]
     pub chicken_spawner: Handle<Image>,
 
+    #[asset(path = "background.png")]
+    pub background: Handle<Image>,
+
     #[asset(path = "main.map")]
     pub map: Handle<Map>,
+
+    #[asset(path = "bip-bop.ogg")]
+    pub background_music: Handle<bevy_kira_audio::AudioSource>,
 }
 
 #[derive(Default, Clone, Copy, Debug, Reflect, Deserialize)]
