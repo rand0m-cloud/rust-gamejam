@@ -30,6 +30,12 @@ pub struct RespawnTimer {
     pub timer: Timer,
 }
 
+#[derive(Component, Reflect, Debug, Default)]
+#[reflect(Component)]
+pub struct DamageFlash {
+    pub timer: Timer,
+}
+
 #[derive(Component, Debug, Reflect, Default)]
 #[reflect(Component)]
 pub struct Health(pub f32);

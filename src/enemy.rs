@@ -52,6 +52,9 @@ pub fn spawn_enemy(
             bullet_cooldown: Timer::from_seconds(0.6, true),
         })
         .insert(Health(PLAYER_HP))
+        .insert(DamageFlash {
+            timer: Timer::from_seconds(0.0, false),
+        })
         .insert(MovementStats { speed: 0.2 })
         .insert(RigidBody::Dynamic)
         .insert(CollisionShape::Sphere { radius: size / 2.0 })
