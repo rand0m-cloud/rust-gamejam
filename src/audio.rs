@@ -34,5 +34,5 @@ fn play_background_music(
     background_channel: Res<AudioChannel<Background>>,
     assets: Res<OurAssets>,
 ) {
-    background_channel.play(assets.background_music.clone());
+    background_channel.play_looped(assets.background_music.clone());
 }
