@@ -182,7 +182,9 @@ fn spawn_menu_particles(mut commands: Commands) {
     }
 
     commands
-        .spawn_bundle(TransformBundle::default())
+        .spawn_bundle(TransformBundle::from_transform(Transform::from_xyz(
+            1.0, -1.0, 0.0,
+        )))
         .insert(ParticleSpawnerTimer(Timer::from_seconds(
             spawner.rate,
             true,
