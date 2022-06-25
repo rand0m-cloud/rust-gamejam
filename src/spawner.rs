@@ -268,6 +268,8 @@ fn spawner_capture_ai(
             commands.entity(spawner_ent).insert(ChickenOrDog::Dog);
         } else if spawner.capture_progress >= 1.0 {
             commands.entity(spawner_ent).insert(ChickenOrDog::Chicken);
+        } else if spawner.capture_progress.abs() <= 0.25 {
+            commands.entity(spawner_ent).remove::<ChickenOrDog>();
         }
     }
 }
