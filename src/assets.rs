@@ -10,7 +10,17 @@ pub const PIXEL_SIZE: f32 = 200.00;
 impl Plugin for GameAssetsPlugin {
     fn build(&self, app: &mut App) {
         app.add_system_set(SystemSet::on_exit(GameState::Splash).with_system(load_graphics))
+            .add_system(rotate)
             .add_system(animate_frames);
+    }
+}
+
+#[derive(Component)]
+pub struct Rotate;
+
+fn rotate(mut graphics: Query<&mut Transform, With<Rotate>>, time: Res<Time>) {
+    for mut transform in graphics.iter_mut() {
+        (*transform).rotate(Quat::from_axis_angle(Vec3::Z, 5.1 * time.delta_seconds()));
     }
 }
 
@@ -53,6 +63,9 @@ pub struct OurAssets {
     #[asset(texture_atlas(tile_size_x = 512., tile_size_y = 512., columns = 1, rows = 1))]
     #[asset(path = "awesome.png")]
     pub placeholder_atlas: Handle<TextureAtlas>,
+
+    #[asset(path = "bullets.png")]
+    pub bullet: Handle<Image>,
 
     #[asset(path = "chicken.png")]
     pub chicken: Handle<Image>,
@@ -131,6 +144,11 @@ pub struct ChickWalkFrames {
     pub texture: Handle<TextureAtlas>,
 }
 
+pub struct BulletFrames {
+    pub frames: Vec<TextureAtlasSprite>,
+    pub texture: Handle<TextureAtlas>,
+}
+
 fn parse_animation(file_contents: &str, atlas: &mut TextureAtlas) -> Vec<TextureAtlasSprite> {
     let desc: GraphicsDesc = ron::from_str(file_contents).unwrap_or_else(|e| {
         panic!("Failed to load config: {}", e);
@@ -172,6 +190,9 @@ fn load_graphics(
     let puppy_image = images.get(assets.dog_minion.clone()).unwrap();
     let mut puppy_atlas = TextureAtlas::new_empty(assets.dog_minion.clone(), puppy_image.size());
 
+    let bullets_image = images.get(assets.bullet.clone()).unwrap();
+    let mut bullets_atlas = TextureAtlas::new_empty(assets.bullet.clone(), bullets_image.size());
+
     let chicken_walk = parse_animation(
         include_str!("../assets/chicken_walk.ron"),
         &mut chicken_atlas,
@@ -191,10 +212,13 @@ fn load_graphics(
     let puppy_walk = parse_animation(include_str!("../assets/puppy_walk.ron"), &mut puppy_atlas);
     let puppy_attack = parse_animation(include_str!("../assets/puppy_shoot.ron"), &mut puppy_atlas);
 
+    let bullet_frames = parse_animation(include_str!("../assets/bullets.ron"), &mut bullets_atlas);
+
     let chicken_handle = texture_atlases.add(chicken_atlas);
     let chick_handle = texture_atlases.add(chick_atlas);
     let dog_handle = texture_atlases.add(dog_atlas);
     let puppy_handle = texture_atlases.add(puppy_atlas);
+    let bullet_handle = texture_atlases.add(bullets_atlas);
 
     commands.insert_resource(ChickenWalkFrames {
         frames: chicken_walk,
@@ -218,5 +242,10 @@ fn load_graphics(
         frames: puppy_walk,
         alt_frames: puppy_attack,
         texture: puppy_handle,
+    });
+
+    commands.insert_resource(BulletFrames {
+        frames: bullet_frames,
+        texture: bullet_handle,
     });
 }

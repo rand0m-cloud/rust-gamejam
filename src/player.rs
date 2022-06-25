@@ -1,6 +1,10 @@
 use bevy::render::camera::Camera2d;
+use rand::Rng;
 
-use crate::{assets::ChickenWalkFrames, prelude::*};
+use crate::{
+    assets::{BulletFrames, ChickenWalkFrames, Rotate},
+    prelude::*,
+};
 
 pub struct PlayerPlugin;
 
@@ -39,7 +43,7 @@ fn player_shoot(
     axis: Res<Axis<GamepadAxis>>,
     time: Res<Time>,
 
-    assets: Res<OurAssets>,
+    bullets: Res<BulletFrames>,
 ) {
     let parent = parent.single();
     let (transform, mut animation, mut player, respawn) = player.single_mut();
@@ -99,14 +103,13 @@ fn player_shoot(
             transform.translation.x += 0.08;
         }
 
+        let num = rand::thread_rng().gen_range(0..2);
+        let sprite = bullets.frames[num].clone();
+
         let bullet = commands
-            .spawn_bundle(SpriteBundle {
-                sprite: Sprite {
-                    color: Color::DARK_GREEN,
-                    custom_size: Some(Vec2::splat(size)),
-                    ..default()
-                },
-                texture: assets.placeholder.clone(),
+            .spawn_bundle(SpriteSheetBundle {
+                sprite,
+                texture_atlas: bullets.texture.clone(),
                 transform,
                 ..default()
             })
@@ -114,6 +117,7 @@ fn player_shoot(
                 speed: 0.2,
                 direction: target_dir,
             })
+            .insert(Rotate)
             .insert(ChickenOrDog::Chicken)
             .insert(RigidBody::Sensor)
             .insert(CollisionShape::Sphere { radius: size / 2.0 })
