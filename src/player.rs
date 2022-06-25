@@ -34,7 +34,6 @@ fn camera_follow(
     camera_translation.translation.y = player_translation.y;
 }
 
-#[allow(clippy::too_many_arguments)]
 fn player_shoot(
     mut commands: Commands,
     mut player: Query<(&Transform, &mut Animation, &mut Player, &RespawnTimer)>,
