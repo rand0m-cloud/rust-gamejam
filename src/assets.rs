@@ -11,6 +11,7 @@ impl Plugin for GameAssetsPlugin {
     fn build(&self, app: &mut App) {
         app.add_system_set(SystemSet::on_exit(GameState::Splash).with_system(load_graphics))
             .add_system(rotate)
+            .add_system_to_stage(CoreStage::PostUpdate, flash_red)
             .add_system(animate_frames);
     }
 }
@@ -147,6 +148,17 @@ pub struct ChickWalkFrames {
 pub struct BulletFrames {
     pub frames: Vec<TextureAtlasSprite>,
     pub texture: Handle<TextureAtlas>,
+}
+
+fn flash_red(mut sprites: Query<(&mut TextureAtlasSprite, &mut DamageFlash)>, time: Res<Time>) {
+    for (mut sprite, mut flash) in sprites.iter_mut() {
+        sprite.color = Color::WHITE;
+        if !flash.timer.finished() {
+            println!("Red");
+            flash.timer.tick(time.delta());
+            sprite.color = Color::RED;
+        }
+    }
 }
 
 fn parse_animation(file_contents: &str, atlas: &mut TextureAtlas) -> Vec<TextureAtlasSprite> {

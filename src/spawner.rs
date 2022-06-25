@@ -155,6 +155,9 @@ fn minions_spawner_ai(
                     commands
                         .entity(ent)
                         .insert(chick_walk.texture.clone())
+                        .insert(DamageFlash {
+                            timer: Timer::from_seconds(0.0, false),
+                        })
                         .insert(chick_walk.frames[0].clone())
                         .insert(Animation {
                             current_frame: 0,
@@ -180,6 +183,9 @@ fn minions_spawner_ai(
                     commands
                         .entity(ent)
                         .insert(puppy_walk.texture.clone())
+                        .insert(DamageFlash {
+                            timer: Timer::from_seconds(0.0, false),
+                        })
                         .insert(puppy_walk.frames[0].clone())
                         .insert(Animation {
                             current_frame: 0,

@@ -220,6 +220,9 @@ fn spawn_player(
         .insert(CollisionShape::Sphere { radius: size / 2.0 })
         .insert(RotationConstraints::lock())
         .insert(CollisionLayers::all_masks::<Layer>().with_group(Layer::Player))
+        .insert(DamageFlash {
+            timer: Timer::from_seconds(0.0, false),
+        })
         .insert(Animation {
             current_frame: 0,
             frames: chicken_walk.frames.iter().map(|f| f.index).collect(),
