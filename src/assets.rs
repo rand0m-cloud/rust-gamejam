@@ -163,7 +163,6 @@ fn flash_red(mut sprites: Query<(&mut TextureAtlasSprite, &mut DamageFlash)>, ti
     for (mut sprite, mut flash) in sprites.iter_mut() {
         sprite.color = Color::WHITE;
         if !flash.timer.finished() {
-            println!("Red");
             flash.timer.tick(time.delta());
             sprite.color = Color::RED;
         }
