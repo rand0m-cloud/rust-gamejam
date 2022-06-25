@@ -23,7 +23,9 @@ impl Plugin for MenuPlugin {
             .init_resource::<f32>()
             .add_startup_system(setup_kayak)
             .add_system_set(SystemSet::on_enter(GameState::MainMenu).with_system(spawn_main_menu))
-            .add_system_set(SystemSet::on_exit(GameState::MainMenu).with_system(destroy_ui));
+            .add_system_set(SystemSet::on_exit(GameState::MainMenu).with_system(destroy_ui))
+            .add_system_set(SystemSet::on_enter(GameState::Tutorial).with_system(spawn_tutorial))
+            .add_system_set(SystemSet::on_exit(GameState::Tutorial).with_system(destroy_ui));
     }
 }
 
@@ -86,7 +88,7 @@ fn spawn_main_menu(
             if let EventType::Click(..) = event.event_type {
                 context.query_world::<ResMut<State<GameState>>, _, _>(|mut state| {
                     state
-                        .set(GameState::GamePlay)
+                        .set(GameState::Tutorial)
                         .expect("Failed to change state");
                 });
             }
@@ -248,4 +250,60 @@ fn SliderBox(props: SliderBoxProps) {
             <widgets::Background on_event={drag_handler} styles={Some(button) } />
         </widgets::Background>
     }
+}
+
+fn spawn_tutorial(
+    mut commands: Commands,
+    assets: Res<AssetServer>,
+    mut image_manager: ResMut<ImageManager>,
+) {
+    let tutorial_screen: Handle<bevy::render::texture::Image> = assets.load("tutorial.png");
+    let image_handle = image_manager.get(&tutorial_screen);
+
+    let start_button: Handle<bevy::render::texture::Image> = assets.load("button_workaround.png");
+    let button_handle = image_manager.get(&start_button);
+
+    let context = BevyContext::new(|context| {
+        let start_button = OnEvent::new(|context, event| {
+            if let EventType::Click(..) = event.event_type {
+                context.query_world::<ResMut<State<GameState>>, _, _>(|mut state| {
+                    state
+                        .set(GameState::GamePlay)
+                        .expect("Failed to change state");
+                });
+            }
+        });
+
+        let bg_image_style = Style {
+            width: StyleProp::Value(Units::Percentage(100.0)),
+            height: StyleProp::Value(Units::Percentage(101.0)),
+            ..default()
+        };
+
+        let button_style = Style {
+            left: StyleProp::Value(Units::Percentage(80.0)),
+            width: StyleProp::Value(Units::Pixels(146.0)),
+            height: StyleProp::Value(Units::Pixels(50.0)),
+            top: StyleProp::Value(Units::Percentage(75.0)),
+            ..default()
+        };
+
+        let image_style = Style {
+            width: StyleProp::Value(Units::Pixels(146.0)),
+            height: StyleProp::Value(Units::Pixels(50.0)),
+            ..default()
+        };
+
+        render! {
+            <widgets::App>
+                <widgets::Image handle={image_handle} styles={Some(bg_image_style)}>
+                  <widgets::Button styles={Some(button_style)} on_event={Some(start_button)}>
+                    <widgets::Image handle={button_handle} styles={Some(image_style)}/>
+                  </widgets::Button>
+                </widgets::Image>
+            </widgets::App>
+        }
+    });
+
+    commands.insert_resource(context);
 }
