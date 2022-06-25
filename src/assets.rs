@@ -77,6 +77,9 @@ pub struct OurAssets {
     #[asset(path = "dog_minion.png")]
     pub dog_minion: Handle<Image>,
 
+    #[asset(path = "building.png")]
+    pub building: Handle<Image>,
+
     #[asset(path = "dog.png")]
     pub dog: Handle<Image>,
 
@@ -150,6 +153,12 @@ pub struct BulletFrames {
     pub texture: Handle<TextureAtlas>,
 }
 
+#[derive(Clone)]
+pub struct BuildingFrames {
+    pub frames: Vec<TextureAtlasSprite>,
+    pub texture: Handle<TextureAtlas>,
+}
+
 fn flash_red(mut sprites: Query<(&mut TextureAtlasSprite, &mut DamageFlash)>, time: Res<Time>) {
     for (mut sprite, mut flash) in sprites.iter_mut() {
         sprite.color = Color::WHITE;
@@ -205,6 +214,10 @@ fn load_graphics(
     let bullets_image = images.get(assets.bullet.clone()).unwrap();
     let mut bullets_atlas = TextureAtlas::new_empty(assets.bullet.clone(), bullets_image.size());
 
+    let buildings_image = images.get(assets.building.clone()).unwrap();
+    let mut buildings_atlas =
+        TextureAtlas::new_empty(assets.building.clone(), buildings_image.size());
+
     let chicken_walk = parse_animation(
         include_str!("../assets/chicken_walk.ron"),
         &mut chicken_atlas,
@@ -225,12 +238,15 @@ fn load_graphics(
     let puppy_attack = parse_animation(include_str!("../assets/puppy_shoot.ron"), &mut puppy_atlas);
 
     let bullet_frames = parse_animation(include_str!("../assets/bullets.ron"), &mut bullets_atlas);
+    let building_frames =
+        parse_animation(include_str!("../assets/building.ron"), &mut buildings_atlas);
 
     let chicken_handle = texture_atlases.add(chicken_atlas);
     let chick_handle = texture_atlases.add(chick_atlas);
     let dog_handle = texture_atlases.add(dog_atlas);
     let puppy_handle = texture_atlases.add(puppy_atlas);
     let bullet_handle = texture_atlases.add(bullets_atlas);
+    let building_handle = texture_atlases.add(buildings_atlas);
 
     commands.insert_resource(ChickenWalkFrames {
         frames: chicken_walk,
@@ -259,5 +275,10 @@ fn load_graphics(
     commands.insert_resource(BulletFrames {
         frames: bullet_frames,
         texture: bullet_handle,
+    });
+
+    commands.insert_resource(BuildingFrames {
+        frames: building_frames,
+        texture: building_handle,
     });
 }

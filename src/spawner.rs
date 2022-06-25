@@ -1,5 +1,5 @@
 use crate::{
-    assets::{ChickWalkFrames, PuppyWalkFrames},
+    assets::{BuildingFrames, ChickWalkFrames, PuppyWalkFrames},
     minion::MinionBundle,
     prelude::*,
     world_ui::{spawn_quad, BarMaterial, Percentage},
@@ -32,6 +32,7 @@ pub fn spawn_initial_spawners(
     mut my_material_assets: ResMut<Assets<BarMaterial>>,
 
     map: Res<Assets<Map>>,
+    buildings: Res<BuildingFrames>,
 ) {
     let map = map.get(our_assets.map.clone()).unwrap();
 
@@ -55,6 +56,7 @@ pub fn spawn_initial_spawners(
         &our_assets,
         ChickenOrDog::Chicken,
         chicken_spawner_locations,
+        buildings.clone(),
         &mut mesh_assets,
         &mut my_material_assets,
     ));
@@ -64,6 +66,7 @@ pub fn spawn_initial_spawners(
         &our_assets,
         ChickenOrDog::Dog,
         dog_spawner_locations,
+        buildings.clone(),
         &mut mesh_assets,
         &mut my_material_assets,
     ));
@@ -84,27 +87,20 @@ fn spawn_minion_spawners(
     assets: &Res<OurAssets>,
     minion_type: ChickenOrDog,
     spawn_locations: Vec<Vec2>,
+    buildings: BuildingFrames,
     mesh_assets: &mut ResMut<Assets<Mesh>>,
     my_material_assets: &mut ResMut<Assets<BarMaterial>>,
 ) -> Vec<Entity> {
-    let (color, texture) = match minion_type {
-        ChickenOrDog::Chicken => (Color::GREEN, assets.chicken_spawner.clone()),
-        ChickenOrDog::Dog => (Color::SALMON, assets.dog_spawner.clone()),
-    };
-
     let mut spawned = Vec::new();
 
     for spawn_location in spawn_locations {
         let ui = spawn_quad(commands, mesh_assets, my_material_assets);
+        let sprite = buildings.frames[1].clone();
         spawned.push(
             commands
-                .spawn_bundle(SpriteBundle {
-                    texture: texture.clone(),
-                    sprite: Sprite {
-                        color,
-                        custom_size: Some(Vec2::splat(0.25)),
-                        ..default()
-                    },
+                .spawn_bundle(SpriteSheetBundle {
+                    texture_atlas: buildings.texture.clone(),
+                    sprite,
                     transform: Transform::from_translation(Vec3::new(
                         spawn_location.x,
                         spawn_location.y,
@@ -209,14 +205,22 @@ fn minions_spawner_ai(
 
 fn spawner_capture_ai(
     mut commands: Commands,
-    mut spawners: Query<(&Collisions, &mut Spawner, Entity, &Children)>,
+    mut spawners: Query<(
+        &Collisions,
+        &mut Spawner,
+        Entity,
+        &Children,
+        &mut TextureAtlasSprite,
+    )>,
     mut ui_query: Query<&mut Percentage>,
     player: Query<(&Player, &RespawnTimer), Without<Minion>>,
     enemy: Query<(&Enemy, &RespawnTimer), Without<Minion>>,
     minions: Query<&ChickenOrDog, (With<Minion>, Without<Spawner>)>,
     time: Res<Time>,
+    buildings: Res<BuildingFrames>,
 ) {
-    for (collisions, mut spawner, spawner_ent, spawner_children) in spawners.iter_mut() {
+    for (collisions, mut spawner, spawner_ent, spawner_children, mut sprite) in spawners.iter_mut()
+    {
         if collisions.is_empty() {
             continue;
         }
@@ -270,11 +274,21 @@ fn spawner_capture_ai(
             }
         }
 
-        if spawner.capture_progress <= -1.0 {
+        if spawner.capture_progress <= -0.5 && spawner.capture_progress >= -0.1 {
+            *sprite = buildings.frames[3].clone();
+        }
+        if spawner.capture_progress <= 0.5 && spawner.capture_progress >= 0.1 {
+            *sprite = buildings.frames[4].clone();
+        }
+
+        if spawner.capture_progress <= -0.9 {
+            *sprite = buildings.frames[0].clone();
             commands.entity(spawner_ent).insert(ChickenOrDog::Dog);
-        } else if spawner.capture_progress >= 1.0 {
+        } else if spawner.capture_progress >= 0.9 {
+            *sprite = buildings.frames[2].clone();
             commands.entity(spawner_ent).insert(ChickenOrDog::Chicken);
-        } else if spawner.capture_progress.abs() <= 0.25 {
+        } else if spawner.capture_progress.abs() <= 0.15 {
+            *sprite = buildings.frames[1].clone();
             commands.entity(spawner_ent).remove::<ChickenOrDog>();
         }
     }
