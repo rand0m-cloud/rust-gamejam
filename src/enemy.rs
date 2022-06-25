@@ -1,6 +1,10 @@
 use heron::rapier_plugin::PhysicsWorld;
+use rand::Rng;
 
-use crate::{assets::DogWalkFrames, prelude::*};
+use crate::{
+    assets::{BulletFrames, DogWalkFrames, Rotate},
+    prelude::*,
+};
 
 pub struct EnemyPlugin;
 impl Plugin for EnemyPlugin {
@@ -138,8 +142,7 @@ fn enemy_shoot(
     physics_world: PhysicsWorld,
     parent: Query<Entity, With<BulletParentTag>>,
     time: Res<Time>,
-
-    assets: Res<OurAssets>,
+    bullets: Res<BulletFrames>,
 ) {
     let parent = parent.single();
     let delta = time.delta();
@@ -197,14 +200,14 @@ fn enemy_shoot(
 
             let size = 0.1;
 
+            let num = rand::thread_rng().gen_range(0..2);
+            let sprite = bullets.frames[num + 2].clone();
+            //sprite.custom_size = Some(Vec2::splat(size));
+
             let bullet = commands
-                .spawn_bundle(SpriteBundle {
-                    sprite: Sprite {
-                        color: Color::DARK_GREEN,
-                        custom_size: Some(Vec2::splat(size)),
-                        ..default()
-                    },
-                    texture: assets.placeholder.clone(),
+                .spawn_bundle(SpriteSheetBundle {
+                    sprite,
+                    texture_atlas: bullets.texture.clone(),
                     transform,
                     ..default()
                 })
@@ -212,6 +215,7 @@ fn enemy_shoot(
                     speed: 0.2,
                     direction: target_dir,
                 })
+                .insert(Rotate)
                 .insert(ChickenOrDog::Dog)
                 .insert(RigidBody::Sensor)
                 .insert(CollisionShape::Sphere { radius: size / 2.0 })

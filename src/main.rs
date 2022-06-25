@@ -1,4 +1,5 @@
 #![allow(clippy::type_complexity)]
+#![allow(clippy::too_many_arguments)]
 
 use bevy::{asset::AssetServerSettings, render::camera::ScalingMode, window::PresentMode};
 use bevy_asset_loader::AssetLoader;
