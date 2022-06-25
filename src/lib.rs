@@ -1,4 +1,5 @@
 #![allow(clippy::type_complexity)]
+pub const SCALE: f32 = 2.0 / 3.0;
 
 pub mod assets;
 pub mod audio;

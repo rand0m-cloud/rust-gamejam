@@ -13,7 +13,7 @@ use kayak_ui::{
     widgets,
 };
 
-use crate::GameState;
+use crate::{GameState, SCALE};
 
 pub struct MenuPlugin;
 
@@ -64,8 +64,8 @@ fn spawn_main_menu(
     let context = BevyContext::new(|context| {
         let container_style = Style {
             layout_type: StyleProp::Value(LayoutType::Column),
-            width: StyleProp::Value(Units::Percentage(30.0)),
-            height: StyleProp::Value(Units::Percentage(40.0)),
+            width: StyleProp::Value(Units::Percentage(35.0)),
+            height: StyleProp::Value(Units::Percentage(45.0)),
 
             border_radius: StyleProp::Value(Corner::all(10.0)),
             background_color: StyleProp::Value(Color::new(0.6, 0.4, 0.3, 1.0)),
@@ -95,8 +95,8 @@ fn spawn_main_menu(
         });
 
         let button_style = Style {
-            width: StyleProp::Value(Units::Percentage(80.0)),
-            height: StyleProp::Value(Units::Percentage(10.0)),
+            width: StyleProp::Value(Units::Percentage(80.0 * SCALE)),
+            height: StyleProp::Value(Units::Percentage(10.0 * SCALE)),
             top: StyleProp::Value(Units::Pixels(5.0)),
             //Centers children
             padding: StyleProp::Value(Edge::all(Units::Stretch(1.0))),
@@ -119,20 +119,20 @@ fn spawn_main_menu(
         //Sizes could be loaded from image desc but that's hell
         let image_title_style = Style {
             top: StyleProp::Value(Units::Pixels(10.0)),
-            width: StyleProp::Value(Units::Pixels(459.0)),
-            height: StyleProp::Value(Units::Pixels(231.0)),
+            width: StyleProp::Value(Units::Pixels(460.0 * SCALE)),
+            height: StyleProp::Value(Units::Pixels(235.0 * SCALE)),
             ..default()
         };
 
         let image_button_style = Style {
-            width: StyleProp::Value(Units::Pixels(73.0)),
-            height: StyleProp::Value(Units::Pixels(25.0)),
+            width: StyleProp::Value(Units::Pixels(73.0 * SCALE)),
+            height: StyleProp::Value(Units::Pixels(25.0 * SCALE)),
             ..default()
         };
 
         let image_volume_style = Style {
-            width: StyleProp::Value(Units::Pixels(113.0)),
-            height: StyleProp::Value(Units::Pixels(32.0)),
+            width: StyleProp::Value(Units::Pixels(113.0 * SCALE)),
+            height: StyleProp::Value(Units::Pixels(32.0 * SCALE)),
             ..default()
         };
 
@@ -142,10 +142,10 @@ fn spawn_main_menu(
         render! {
             <widgets::App>
                 <widgets::Background styles={Some(container_style)}>
-                    //<widgets::Text content={"Video Game Title".to_string()} size={32.0} styles={Some(title_style)}/>
+                    //<widgets::Text content={"Fight for the Frontier".to_string()} size={32.0} styles={Some(_title_style)}/>
                     //<widgets::Text content={"Game By: rand0m-cloud & LogicProjects".to_string()} size={24.0} />
-                    //<widgets::Text content={"Art By: Madeline Hunt".to_string()} size={24.0} styles={Some(title_style)}/>
-                    //<widgets::Text content={"Made with Bevy!".to_string()} size={24.0} styles={Some(title_style)}/>
+                    //<widgets::Text content={"Art By: Madeline Hunt".to_string()} size={24.0} styles={Some(_title_style)}/>
+                    //<widgets::Text content={"Made with Bevy!".to_string()} size={24.0} styles={Some(_title_style)}/>
                     <widgets::Image handle={image_handle} styles={Some(image_title_style)}/>
                     <widgets::Button styles={Some(button_style)} on_event={Some(start_button)}>
                         //<widgets::Text content={"Start".to_string()} size={24.0} />
@@ -178,9 +178,9 @@ pub struct SliderBoxProps {
 fn SliderBox(props: SliderBoxProps) {
     //Set up slider internal state
     let (is_dragging, set_is_dragging, ..) = use_state!(false);
-    let (offset, set_offset, ..) = use_state!(props.size.0 / 2.3);
-    let (pos, set_pos, ..) = use_state!(props.size.0 / 2.3);
-    let (percent, set_percent, ..) = use_state!(50.0);
+    let (offset, set_offset, ..) = use_state!(props.size.0 / 7.3);
+    let (pos, set_pos, ..) = use_state!(props.size.0 / 7.3);
+    let (percent, set_percent, ..) = use_state!(10.0);
     let (layout, set_layout, ..) = use_state!(10000.0);
 
     //Handle dragging
@@ -215,7 +215,7 @@ fn SliderBox(props: SliderBoxProps) {
 
     //Calculate max allowed percent
     //(position is set at top left corner of button so max percent is less than 100)
-    let max_percent = (1.0 - (button_width * 2.0) / layout) * 100.0;
+    let max_percent = (1.0 - button_width / layout) * 100.0;
 
     //Update percent
     set_percent((pos / layout * 100.0).clamp(0.0, max_percent));
@@ -229,8 +229,8 @@ fn SliderBox(props: SliderBoxProps) {
     let background = Style {
         border_radius: StyleProp::Value(Corner::all(round_amount)),
         left: StyleProp::Value(Units::Pixels(20.0)),
-        width: StyleProp::Value(Units::Pixels(width)),
-        height: StyleProp::Value(Units::Pixels(height)),
+        width: StyleProp::Value(Units::Pixels(width * SCALE)),
+        height: StyleProp::Value(Units::Pixels(height * SCALE)),
         background_color: StyleProp::Value(props.box_color),
         //padding: StyleProp::Value(Edge::all(Units::Percentage(10.0))),
         ..default()
