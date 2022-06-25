@@ -190,6 +190,9 @@ pub fn minions_ai(
         let dir = dir.try_normalize().unwrap_or_default().extend(0.0);
         if !animation.playing_alt {
             animation.flip_x = dir.x > 0.0;
+            if minion_type == &ChickenOrDog::Dog {
+                animation.flip_x = !animation.flip_x;
+            }
         }
         transform.translation += dir * movement_stats.speed * time.delta_seconds();
     }
@@ -228,6 +231,9 @@ fn minions_attack(
                 let distance = (target_transform.translation.truncate() - position).length();
                 if team != enemy_team && distance <= MINION_MELEE_RANGE {
                     animation.flip_x = target_transform.translation.x - position.x > 0.0;
+                    if team == &ChickenOrDog::Dog {
+                        animation.flip_x = !animation.flip_x;
+                    }
                     Some(health)
                 } else {
                     None

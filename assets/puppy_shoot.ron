@@ -1,0 +1,14 @@
+(
+    frames : [
+        SpriteDesc(
+            pos: (0., 58.),
+            size: (49., 38.),
+            anchor: None,
+        ),
+        SpriteDesc(
+            pos: (75., 58.),
+            size: (49., 38.),
+            anchor: None,
+        ),
+    ]
+)

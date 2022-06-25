@@ -49,15 +49,19 @@ fn animate_frames(mut graphics: Query<(&mut TextureAtlasSprite, &mut Animation)>
 pub struct OurAssets {
     #[asset(path = "awesome.png")]
     pub placeholder: Handle<Image>,
+
+    #[asset(texture_atlas(tile_size_x = 512., tile_size_y = 512., columns = 1, rows = 1))]
+    #[asset(path = "awesome.png")]
+    pub placeholder_atlas: Handle<TextureAtlas>,
+
     #[asset(path = "chicken.png")]
     pub chicken: Handle<Image>,
 
     #[asset(path = "chicken_minion.png")]
     pub chicken_minion: Handle<Image>,
 
-    #[asset(texture_atlas(tile_size_x = 512., tile_size_y = 512., columns = 1, rows = 1))]
-    #[asset(path = "awesome.png")]
-    pub placeholder_atlas: Handle<TextureAtlas>,
+    #[asset(path = "dog_minion.png")]
+    pub dog_minion: Handle<Image>,
 
     #[asset(path = "dog.png")]
     pub dog: Handle<Image>,
@@ -115,6 +119,12 @@ pub struct DogWalkFrames {
     pub texture: Handle<TextureAtlas>,
 }
 
+pub struct PuppyWalkFrames {
+    pub frames: Vec<TextureAtlasSprite>,
+    pub alt_frames: Vec<TextureAtlasSprite>,
+    pub texture: Handle<TextureAtlas>,
+}
+
 pub struct ChickWalkFrames {
     pub frames: Vec<TextureAtlasSprite>,
     pub alt_frames: Vec<TextureAtlasSprite>,
@@ -159,6 +169,9 @@ fn load_graphics(
     let dog_image = images.get(assets.dog.clone()).unwrap();
     let mut dog_atlas = TextureAtlas::new_empty(assets.dog.clone(), dog_image.size());
 
+    let puppy_image = images.get(assets.dog_minion.clone()).unwrap();
+    let mut puppy_atlas = TextureAtlas::new_empty(assets.dog_minion.clone(), puppy_image.size());
+
     let chicken_walk = parse_animation(
         include_str!("../assets/chicken_walk.ron"),
         &mut chicken_atlas,
@@ -175,9 +188,13 @@ fn load_graphics(
     let dog_walk = parse_animation(include_str!("../assets/dog_walk.ron"), &mut dog_atlas);
     let dog_attack = parse_animation(include_str!("../assets/dog_shoot.ron"), &mut dog_atlas);
 
+    let puppy_walk = parse_animation(include_str!("../assets/puppy_walk.ron"), &mut puppy_atlas);
+    let puppy_attack = parse_animation(include_str!("../assets/puppy_shoot.ron"), &mut puppy_atlas);
+
     let chicken_handle = texture_atlases.add(chicken_atlas);
     let chick_handle = texture_atlases.add(chick_atlas);
     let dog_handle = texture_atlases.add(dog_atlas);
+    let puppy_handle = texture_atlases.add(puppy_atlas);
 
     commands.insert_resource(ChickenWalkFrames {
         frames: chicken_walk,
@@ -195,5 +212,11 @@ fn load_graphics(
         frames: dog_walk,
         alt_frames: dog_attack,
         texture: dog_handle,
+    });
+
+    commands.insert_resource(PuppyWalkFrames {
+        frames: puppy_walk,
+        alt_frames: puppy_attack,
+        texture: puppy_handle,
     });
 }

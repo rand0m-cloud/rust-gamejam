@@ -1,5 +1,5 @@
 use crate::{
-    assets::ChickWalkFrames,
+    assets::{ChickWalkFrames, PuppyWalkFrames},
     minion::MinionBundle,
     prelude::*,
     world_ui::{spawn_quad, BarMaterial, Percentage},
@@ -134,6 +134,7 @@ fn minions_spawner_ai(
     assets: Res<OurAssets>,
     mut spawners_query: Query<(&mut Spawner, &GlobalTransform, &ChickenOrDog)>,
     chick_walk: Res<ChickWalkFrames>,
+    puppy_walk: Res<PuppyWalkFrames>,
     parent: Query<Entity, With<MinionParentTag>>,
     time: Res<Time>,
 ) {
@@ -176,6 +177,22 @@ fn minions_spawner_ai(
                         transform.translation.truncate(),
                     )
                     .unwrap();
+                    commands
+                        .entity(ent)
+                        .insert(puppy_walk.texture.clone())
+                        .insert(puppy_walk.frames[0].clone())
+                        .insert(Animation {
+                            current_frame: 0,
+                            frames: puppy_walk.frames.iter().map(|f| f.index).collect(),
+                            alt_frames: Some(
+                                puppy_walk.alt_frames.iter().map(|f| f.index).collect(),
+                            ),
+                            playing_alt: false,
+                            playing: true,
+                            flip_x: false,
+                            flip_y: false,
+                            timer: Timer::from_seconds(1.0 / 10.0, true),
+                        });
                     spawned.push(ent);
                 }
             }
